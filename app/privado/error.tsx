@@ -2,7 +2,7 @@
 
 export default function PrivateAreaError() {
   return (
-    <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center bg-porcelain px-6 py-16 text-ink">
+    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center bg-porcelain px-6 py-16 text-ink">
       <p className="text-[0.68rem] uppercase tracking-[0.28em] text-gilt">Estudio</p>
       <h1 className="mt-3 font-serif text-4xl">El área privada no puede abrirse</h1>
       <p className="mt-4 text-sm leading-relaxed text-ash">

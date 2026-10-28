@@ -3,15 +3,15 @@ import { BrandLogo } from "./BrandLogo";
 import { site } from "@/lib/site";
 import { getLocale, getMessages, localePath } from "@/lib/i18n";
 
-export async function SiteFooter() {
+export async function SiteFooter({ compact = false }: { compact?: boolean }) {
   const locale = await getLocale();
   const t = getMessages(locale);
 
   return (
     <footer className="border-t border-ink/10">
-      <div className="mx-auto flex max-w-[1120px] flex-col gap-4 px-6 py-8 text-[0.7rem] uppercase tracking-[0.18em] text-ash md:px-10 sm:flex-row sm:items-center sm:justify-between">
+      <div className={`mx-auto flex max-w-[1120px] flex-col text-[0.7rem] uppercase tracking-[0.18em] text-ash sm:flex-row sm:items-center sm:justify-between ${compact ? "gap-2 px-4 py-3 md:px-10" : "gap-4 px-6 py-8 md:px-10"}`}>
         <div className="flex items-center gap-3">
-          <BrandLogo size="footer" />
+          <BrandLogo size="footer" className={compact ? "size-10" : undefined} />
           <div>
             <p>{site.legalName}</p>
             <p className="mt-1">
@@ -30,7 +30,7 @@ export async function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-ink/10 bg-linen/50">
-        <div className="mx-auto flex max-w-[1120px] flex-wrap items-center justify-between gap-x-8 gap-y-4 px-6 py-5 md:px-10">
+        <div className={`mx-auto flex max-w-[1120px] flex-wrap items-center justify-between gap-x-8 md:px-10 ${compact ? "gap-y-2 px-4 py-3" : "gap-y-4 px-6 py-5"}`}>
           <nav
             className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-ink"
             aria-label={t.footer.legal}
@@ -66,7 +66,7 @@ export async function SiteFooter() {
             width={226}
             height={100}
             sizes="160px"
-            className="h-14 w-auto"
+            className={compact ? "h-9 w-auto" : "h-14 w-auto"}
           />
         </div>
       </div>

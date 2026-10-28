@@ -72,12 +72,8 @@ export function MailAlert() {
     window.addEventListener("pointerdown", arm);
     window.addEventListener("mm-mail", poll);
     window.addEventListener("mm-unseen", onUnseen);
-    const onDesk = window.location.pathname.startsWith("/privado/correo");
-    if (!onDesk) void poll();
-    const timer = onDesk ? 0 : window.setInterval(() => void poll(), 180_000);
     return () => {
       dead = true;
-      if (timer) window.clearInterval(timer);
       window.removeEventListener("pointerdown", arm);
       window.removeEventListener("mm-mail", poll);
       window.removeEventListener("mm-unseen", onUnseen);

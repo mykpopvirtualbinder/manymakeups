@@ -97,7 +97,7 @@ export async function PortalFrame({
 
   if (pinned) {
     return (
-      <div className="portal-shell flex h-dvh shrink-0 flex-col overflow-hidden bg-porcelain text-ink">
+      <div className="portal-shell flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-porcelain text-ink">
         {header}
         <div className={`mx-auto flex min-h-0 w-full min-w-0 ${width} flex-1 flex-col px-4 md:px-10`}>
           <div className={dense ? "shrink-0 pt-3 md:pt-5" : "shrink-0 pt-5 md:pt-10"}>{intro}</div>
@@ -108,9 +108,9 @@ export async function PortalFrame({
   }
 
   return (
-    <div className="portal-shell flex min-h-full flex-1 flex-col bg-porcelain text-ink">
+    <div className="portal-shell flex min-h-0 w-full flex-1 flex-col overflow-y-auto bg-porcelain text-ink">
       {header}
-      <main className="mx-auto max-w-[960px] px-4 pb-[max(5rem,env(safe-area-inset-bottom))] pt-8 md:px-10 md:pt-10">
+      <main className="mx-auto w-full max-w-[960px] px-4 pb-10 pt-8 md:px-10 md:pt-10">
         {intro}
         <div className="mt-10">{children}</div>
       </main>
