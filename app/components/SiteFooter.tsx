@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { BrandLogo } from "./BrandLogo";
 import { site } from "@/lib/site";
 import { getLocale, getMessages, localePath } from "@/lib/i18n";
@@ -29,35 +30,45 @@ export async function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-ink/10 bg-linen/50">
-        <nav
-          className="mx-auto flex max-w-[1120px] flex-wrap items-center gap-x-8 gap-y-3 px-6 py-5 text-sm text-ink md:px-10"
-          aria-label={t.footer.legal}
-        >
-          <a
-            className="underline-offset-4 hover:underline"
-            href={localePath(locale, "/aviso-legal")}
+        <div className="mx-auto flex max-w-[1120px] flex-wrap items-center justify-between gap-x-8 gap-y-4 px-6 py-5 md:px-10">
+          <nav
+            className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-ink"
+            aria-label={t.footer.legal}
           >
-            {t.footer.notice}
-          </a>
-          <a
-            className="underline-offset-4 hover:underline"
-            href={localePath(locale, "/privacidad")}
-          >
-            {t.footer.privacy}
-          </a>
-          <a
-            className="underline-offset-4 hover:underline"
-            href={localePath(locale, "/cookies")}
-          >
-            {t.footer.cookies}
-          </a>
-          <a
-            className="underline-offset-4 hover:underline"
-            href={localePath(locale, "/area-novia")}
-          >
-            {t.nav.brideArea}
-          </a>
-        </nav>
+            <a
+              className="underline-offset-4 hover:underline"
+              href={localePath(locale, "/aviso-legal")}
+            >
+              {t.footer.notice}
+            </a>
+            <a
+              className="underline-offset-4 hover:underline"
+              href={localePath(locale, "/privacidad")}
+            >
+              {t.footer.privacy}
+            </a>
+            <a
+              className="underline-offset-4 hover:underline"
+              href={localePath(locale, "/cookies")}
+            >
+              {t.footer.cookies}
+            </a>
+            <a
+              className="underline-offset-4 hover:underline"
+              href={localePath(locale, "/area-novia")}
+            >
+              {t.nav.brideArea}
+            </a>
+          </nav>
+          <Image
+            src="/brand/footer/logo-omyo.png"
+            alt="Omyo Creator Lab"
+            width={226}
+            height={100}
+            sizes="160px"
+            className="h-14 w-auto"
+          />
+        </div>
       </div>
     </footer>
   );
