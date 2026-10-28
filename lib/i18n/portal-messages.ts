@@ -21,6 +21,7 @@ export type PortalCopy = {
   errorDatos: string;
   errorAcceso: string;
   errorInvitacion: string;
+  errorStore: string;
   recoverLead: string;
   recoverSend: string;
   recoverBack: string;
@@ -372,6 +373,7 @@ export const portalEs: PortalCopy = {
   errorDatos: "Revisa el correo y la contraseña.",
   errorAcceso: "No reconocemos esa cuenta. Si acabas de recibir la invitación, actívala primero.",
   errorInvitacion: "Ese enlace ya no es válido. Pídeme uno nuevo por WhatsApp o correo.",
+  errorStore: "El área no puede abrirse ahora: el almacén está cerrado hasta el 22 de noviembre.",
   recoverLead:
     "Escribe el correo de tu cuenta. Si está en el sistema, te enviaré un enlace para elegir una nueva.",
   recoverSend: "Enviar enlace",
@@ -820,6 +822,7 @@ export const portalEn: PortalCopy = {
   errorDatos: "Please check the email and password.",
   errorAcceso: "We do not recognise that account. If you have just received the invitation, activate it first.",
   errorInvitacion: "That link is no longer valid. Ask me for a new one by WhatsApp or email.",
+  errorStore: "The area cannot open right now: the archive is closed until 22 November.",
   recoverLead: "Enter the email for your account. If it is in the system, I will send a link to choose a new password.",
   recoverSend: "Send link",
   recoverBack: "Back to sign in",
@@ -1259,6 +1262,7 @@ export const portalFr: PortalCopy = {
   errorDatos: "Vérifie l’e-mail et le mot de passe.",
   errorAcceso: "Nous ne reconnaissons pas ce compte. Si tu viens de recevoir l’invitation, active-la d’abord.",
   errorInvitacion: "Ce lien n’est plus valable. Demande-m’en un nouveau par WhatsApp ou e-mail.",
+  errorStore: "L’espace ne peut pas s’ouvrir pour le moment : l’archive est fermée jusqu’au 22 novembre.",
   recoverLead:
     "Indique l’e-mail de ton compte. S’il est dans le système, je t’enverrai un lien pour en choisir un nouveau.",
   recoverSend: "Envoyer le lien",

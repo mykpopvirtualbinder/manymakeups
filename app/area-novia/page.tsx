@@ -23,6 +23,7 @@ export default async function BrideLoginPage({
     datos: t.errorDatos,
     acceso: t.errorAcceso,
     invitacion: t.errorInvitacion,
+    almacen: t.errorStore,
   };
   const message = error ? errors[error] : null;
 

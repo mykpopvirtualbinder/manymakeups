@@ -8,7 +8,8 @@ import { StudioAside } from "@/app/components/portal/StudioAside";
 import { clientMatchesSearch, clientSearchMode, presupuestoDocumentNames } from "@/lib/portal/client-search";
 import { fullName } from "@/lib/portal/names";
 import { requireAdmin } from "@/lib/portal/session";
-import { listClients, portalStorageReady } from "@/lib/portal/store";
+import { listClients, portalStorageReady, portalStoreClosed } from "@/lib/portal/store";
+import { StoreClosed } from "@/app/components/portal/StoreClosed";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -34,7 +35,13 @@ export default async function StudioClientsPage({
 }) {
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
-  const clients = await listClients();
+  let clients;
+  try {
+    clients = await listClients();
+  } catch (err) {
+    if (portalStoreClosed(err)) return <StoreClosed />;
+    throw err;
+  }
   const { error, ok, por, q, partida, invite, client: inviteClient, sent, wp } = await searchParams;
   const mode = clientSearchMode(por);
   const query = q ?? "";

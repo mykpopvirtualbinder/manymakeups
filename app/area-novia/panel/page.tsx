@@ -20,7 +20,7 @@ import { INSPIRATION_MAX } from "@/lib/portal/files";
 import { companionHeading, fullName, mailName } from "@/lib/portal/names";
 import { getLocale, getPortalCopy, interpolate, localePath } from "@/lib/i18n";
 import { requireClient, requirePlanner } from "@/lib/portal/session";
-import { getClient, listNotices, markClientCommsRead } from "@/lib/portal/store";
+import { getClient, listNotices, markClientCommsRead, portalStoreClosed } from "@/lib/portal/store";
 import {
   CONTRACTOR_TRIAL_PHOTOS,
   contractorInspirationKey,
@@ -55,7 +55,19 @@ export default async function BridePanelPage({
   const planner = await requirePlanner();
   const session = planner ? null : await requireClient();
   if (!planner && !session) redirect(localePath(locale, "/area-novia"));
-  const client = await getClient(planner ? planner.clientId : session!.sub);
+  let client;
+  try {
+    client = await getClient(planner ? planner.clientId : session!.sub);
+  } catch (err) {
+    if (portalStoreClosed(err)) {
+      return (
+        <PortalFrame localize kicker={t.kicker} title={t.loginTitle} lead={t.errorStore}>
+          <PortalNotice>{t.errorStore}</PortalNotice>
+        </PortalFrame>
+      );
+    }
+    throw err;
+  }
   if (!client) redirect(planner ? "/wp?error=enlace" : localePath(locale, "/area-novia"));
   if (planner && !client.planners.some((item) => item.id === planner.sub)) redirect("/wp?error=enlace");
   const consult = Boolean(planner);

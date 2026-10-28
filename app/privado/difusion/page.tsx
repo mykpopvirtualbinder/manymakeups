@@ -4,7 +4,8 @@ import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioAside } from "@/app/components/portal/StudioAside";
 import { fullName } from "@/lib/portal/names";
 import { requireAdmin } from "@/lib/portal/session";
-import { listClients } from "@/lib/portal/store";
+import { listClients, portalStoreClosed } from "@/lib/portal/store";
+import { StoreClosed } from "@/app/components/portal/StoreClosed";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -23,7 +24,13 @@ export default async function BroadcastPage({
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
   const { error, ok, sent, failed } = await searchParams;
-  const clients = await listClients();
+  let clients;
+  try {
+    clients = await listClients();
+  } catch (err) {
+    if (portalStoreClosed(err)) return <StoreClosed />;
+    throw err;
+  }
   const active = clients.filter((client) => client.passwordHash);
 
   return (

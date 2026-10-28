@@ -4,7 +4,8 @@ import { StudioAside } from "@/app/components/portal/StudioAside";
 import { StudioInbox } from "@/app/components/portal/StudioInbox";
 import { fullName } from "@/lib/portal/names";
 import { requireAdmin } from "@/lib/portal/session";
-import { listClients, listNotices } from "@/lib/portal/store";
+import { listClients, listNotices, portalStoreClosed } from "@/lib/portal/store";
+import { StoreClosed } from "@/app/components/portal/StoreClosed";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -22,8 +23,15 @@ export default async function StudioInboxPage({
 }) {
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
-  const clients = await listClients();
-  const notices = (await listNotices()).filter((notice) => !notice.fromStudio);
+  let clients;
+  let notices;
+  try {
+    clients = await listClients();
+    notices = (await listNotices()).filter((notice) => !notice.fromStudio);
+  } catch (err) {
+    if (portalStoreClosed(err)) return <StoreClosed />;
+    throw err;
+  }
   const unread = notices.filter((notice) => !notice.read).length;
   const { ok, error } = await searchParams;
 

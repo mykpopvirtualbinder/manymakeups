@@ -28,7 +28,8 @@ import {
   productsFor,
 } from "@/lib/portal/types";
 import { requireAdmin } from "@/lib/portal/session";
-import { getClient, listNotices } from "@/lib/portal/store";
+import { getClient, listNotices, portalStoreClosed } from "@/lib/portal/store";
+import { StoreClosed } from "@/app/components/portal/StoreClosed";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -49,9 +50,21 @@ export default async function StudioClientPage({
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
   const { id } = await params;
-  const client = await getClient(id);
+  let client;
+  try {
+    client = await getClient(id);
+  } catch (err) {
+    if (portalStoreClosed(err)) return <StoreClosed />;
+    throw err;
+  }
   if (!client) notFound();
-  const requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
+  let requests;
+  try {
+    requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
+  } catch (err) {
+    if (portalStoreClosed(err)) return <StoreClosed />;
+    throw err;
+  }
   const { ok, error, tab: tabRaw, com, sec, aviso } = await searchParams;
   const event = client.event;
   const tab = studioTab(tabRaw);

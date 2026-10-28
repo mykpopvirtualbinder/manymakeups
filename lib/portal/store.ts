@@ -38,6 +38,11 @@ export function portalStorageReady() {
   return useBlob();
 }
 
+export function portalStoreClosed(err: unknown) {
+  const message = err instanceof Error ? err.message : "";
+  return /suspended/i.test(message);
+}
+
 async function readDb(): Promise<PortalDb> {
   if (useBlob()) {
     const result = await get(DB_PATH, { access: "private", useCache: false });

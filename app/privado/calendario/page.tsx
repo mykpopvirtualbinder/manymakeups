@@ -5,7 +5,8 @@ import { fetchCalendarEvents, monthCells, parseMonth, madridToday } from "@/lib/
 import { googleCalendarConfigured } from "@/lib/portal/google-calendar";
 import { fullName } from "@/lib/portal/names";
 import { requireAdmin } from "@/lib/portal/session";
-import { getGoogleCalendarLink, getStudioCalendars, listClients, listHiddenCalendarIds } from "@/lib/portal/store";
+import { getGoogleCalendarLink, getStudioCalendars, listClients, listHiddenCalendarIds, portalStoreClosed } from "@/lib/portal/store";
+import { StoreClosed } from "@/app/components/portal/StoreClosed";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -30,12 +31,23 @@ export default async function StudioCalendarPage({
     invalid_grant: "Ese permiso de Google ya no vale. Vuelve a conectar.",
     missing_refresh: "Google ha entrado, pero no ha dado permiso permanente para borrar. Quita Many Makeups en la cuenta de Google y vuelve a conectar.",
   };
-  const clients = await listClients();
-  const hiddenIds = await listHiddenCalendarIds();
-  const googleLink = await getGoogleCalendarLink();
+  let clients;
+  let hiddenIds;
+  let googleLink;
+  let primary;
+  let google;
+  let extra;
+  try {
+    clients = await listClients();
+    hiddenIds = await listHiddenCalendarIds();
+    googleLink = await getGoogleCalendarLink();
+    ({ primary, google, extra } = await getStudioCalendars());
+  } catch (err) {
+    if (portalStoreClosed(err)) return <StoreClosed />;
+    throw err;
+  }
   const googleConfigured = googleCalendarConfigured();
   const googleConnected = googleConfigured && Boolean(googleLink.refreshToken);
-  const { primary, google, extra } = await getStudioCalendars();
   const feeds = [
     { url: primary, source: "iPhone" },
     { url: google, source: "Google" },
