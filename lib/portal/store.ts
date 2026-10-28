@@ -40,24 +40,30 @@ export function portalStorageReady() {
 
 export function portalStoreClosed(err: unknown) {
   const message = err instanceof Error ? err.message : "";
-  return /suspended/i.test(message);
+  return message === "PORTAL_STORE_CLOSED" || /suspended/i.test(message);
 }
 
 async function readDb(): Promise<PortalDb> {
   if (useBlob()) {
-    const result = await get(DB_PATH, { access: "private", useCache: false });
-    if (!result) return emptyDb();
-    const text = await new Response(result.stream).text();
-    const parsed = JSON.parse(text) as PortalDb;
-    return {
-      clients: (parsed.clients ?? []).map((client) => normalizeClient(client)),
-      notices: (parsed.notices ?? []).map(asStudioNotice).filter(Boolean) as StudioNotice[],
-      studioCalendarUrl: typeof parsed.studioCalendarUrl === "string" ? parsed.studioCalendarUrl : "",
-      studioCalendarGoogle: typeof parsed.studioCalendarGoogle === "string" ? parsed.studioCalendarGoogle : "",
-      studioCalendarExtra: typeof parsed.studioCalendarExtra === "string" ? parsed.studioCalendarExtra : "",
-      hiddenCalendarIds: hiddenCalendarIds(parsed.hiddenCalendarIds),
-      ...googleLink(parsed),
-    };
+    try {
+      const result = await get(DB_PATH, { access: "private", useCache: false });
+      if (!result) return emptyDb();
+      const text = await new Response(result.stream).text();
+      const parsed = JSON.parse(text) as PortalDb;
+      return {
+        clients: (parsed.clients ?? []).map((client) => normalizeClient(client)),
+        notices: (parsed.notices ?? []).map(asStudioNotice).filter(Boolean) as StudioNotice[],
+        studioCalendarUrl: typeof parsed.studioCalendarUrl === "string" ? parsed.studioCalendarUrl : "",
+        studioCalendarGoogle: typeof parsed.studioCalendarGoogle === "string" ? parsed.studioCalendarGoogle : "",
+        studioCalendarExtra: typeof parsed.studioCalendarExtra === "string" ? parsed.studioCalendarExtra : "",
+        hiddenCalendarIds: hiddenCalendarIds(parsed.hiddenCalendarIds),
+        ...googleLink(parsed),
+      };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "";
+      if (/does not exist/i.test(message)) return emptyDb();
+      throw new Error("PORTAL_STORE_CLOSED");
+    }
   }
   try {
     const raw = await readFile(path.join(ROOT, DB_PATH), "utf8");
