@@ -72,7 +72,7 @@ export function SubTabs({
           );
         })
       ) : (
-        <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-0 pb-16 pt-6">
+        <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto px-0 pb-16 pt-6">
           {active.body}
         </div>
       )}
@@ -368,7 +368,7 @@ function EventFilters({
             key={panel.id}
             hidden={!panel.show}
             data-portal-scroll={panel.show ? "" : undefined}
-            className={panel.show ? "h-full overflow-y-auto overscroll-contain pb-16 pt-4" : undefined}
+            className={panel.show ? "h-full overflow-y-auto pb-16 pt-4" : undefined}
           >
             {panel.node}
           </div>

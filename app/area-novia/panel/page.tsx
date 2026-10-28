@@ -276,7 +276,7 @@ export default async function BridePanelPage({
             className={
               consult || client.event.peopleLocked
                 ? "mt-4 flex min-h-0 flex-1 flex-col"
-                : "mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16"
+                : "mt-4 min-h-0 flex-1 overflow-y-auto pb-16"
             }
             {...(consult || client.event.peopleLocked ? {} : { "data-portal-scroll": "" })}
           >
@@ -388,7 +388,7 @@ export default async function BridePanelPage({
         <section className="flex min-h-0 flex-1 flex-col pt-4">
           <h2 className="shrink-0 font-serif text-3xl">{t.budgetTitle}</h2>
           <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">{t.budgetLead}</p>
-          <div data-portal-scroll className="mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
+          <div data-portal-scroll className="mt-6 min-h-0 flex-1 overflow-y-auto pb-16">
             <BudgetView
               entries={client.history}
               payments={client.payments}
@@ -410,7 +410,7 @@ export default async function BridePanelPage({
             )}
           </div>
           <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">{t.docsLead}</p>
-          <div data-portal-scroll className="mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
+          <div data-portal-scroll className="mt-6 min-h-0 flex-1 overflow-y-auto pb-16">
           {client.documents.length ? (
             <ul className="mt-8 divide-y divide-ink/10 border border-ink/10">
               {client.documents.map((file) => (
