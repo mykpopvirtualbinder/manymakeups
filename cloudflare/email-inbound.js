@@ -1,7 +1,9 @@
-// Worker de Email Routing. En la cuenta de Cloudflare de Many Makeups:
-// Workers → email-worker → index.js → Deploy.
-// Variable INBOUND_SECRET: el mismo valor que EMAIL_INBOUND_SECRET en Vercel.
-// Una regla por cuenta, las cinco hacia este worker:
+// Worker de Email Routing, en la misma cuenta de Cloudflare que My K-pop Binder.
+// El worker del binder se llama email-worker y no se toca.
+// Este va aparte: Workers → manymakeups-email → pegar este archivo → Deploy.
+// Secreto INBOUND_SECRET: el mismo valor que EMAIL_INBOUND_SECRET en Vercel
+// (proyecto manymakeups, Production).
+// Una regla por cuenta, las cinco hacia manymakeups-email:
 // info@, accounting@, formaciones@, comercial@, management@manymakeups.com
 
 export default {
