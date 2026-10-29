@@ -264,7 +264,7 @@ export function MailDesk() {
       }
     }
     void poll();
-    const timer = window.setInterval(() => void poll(), 180_000);
+    const timer = window.setInterval(() => void poll(), 600_000);
     return () => {
       dead = true;
       window.clearInterval(timer);
