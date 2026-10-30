@@ -214,7 +214,7 @@ function signaturePath(account: MailboxKey) {
 
 function letterHtml(account: MailboxKey, message: string, src: string) {
   const box = mailboxByKey(account);
-  const type = `font-family:${MAIL_FONT};font-size:16px;line-height:1.65;color:#1a1613;text-align:left;`;
+  const type = `font-family:${MAIL_FONT};font-size:16px;line-height:1.65;color:#1a1613;text-align:justify;`;
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${SIGNATURE_BACKGROUND};"><tr><td style="padding:28px 24px 40px;${type}"><div style="${type}white-space:pre-wrap;">${messageToHtml(message)}</div><img src="${src}" alt="Ana Zarza · ${box?.address || "Many Makeups"}" width="${SIGNATURE_WIDTH}" height="${SIGNATURE_HEIGHT}" style="display:block;border:0;width:${SIGNATURE_WIDTH}px;max-width:100%;height:auto;margin:28px 0 0;background:${SIGNATURE_BACKGROUND};" /></td></tr></table>`;
 }
 

@@ -187,7 +187,7 @@ function serializeMessage(root: HTMLElement | null) {
   return Array.from(root.childNodes).map(walk).join("").replace(/^\n+/, "").replace(/\n+$/, "");
 }
 
-function ComposeBody({ initial, onChange }: { initial: string; onChange: (value: string) => void }) {
+function ComposeBody({ initial, onChange, bindLink }: { initial: string; onChange: (value: string) => void; bindLink: (open: () => void) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const initialRef = useRef(initial);
   const rangeRef = useRef<Range | null>(null);
@@ -251,14 +251,10 @@ function ComposeBody({ initial, onChange }: { initial: string; onChange: (value:
     publish();
   }
 
+  bindLink(rememberSelection);
+
   return (
     <div className="mt-4">
-      <div className="mb-2 flex items-center gap-2">
-        <Tool label="Enlace" onMouseDown={rememberSelection}>
-          <Icon name="link" />
-        </Tool>
-        <span className="text-[0.68rem] text-ash">Selecciona una palabra y pulsa el enlace.</span>
-      </div>
       {asking ? (
         <div className="mb-2 flex flex-wrap items-end gap-2">
           <label className="min-w-0 flex-1 text-sm text-ink">
@@ -286,7 +282,7 @@ function ComposeBody({ initial, onChange }: { initial: string; onChange: (value:
       {hint ? <p className="mb-2 text-sm text-ink">{hint}</p> : null}
       <div
         ref={ref}
-        className="field min-h-48 whitespace-pre-wrap font-sans text-base leading-relaxed [&_a]:text-ink [&_a]:underline"
+        className="field min-h-48 whitespace-pre-wrap text-justify font-sans text-base leading-relaxed [&_a]:text-ink [&_a]:underline"
         contentEditable
         role="textbox"
         aria-multiline="true"
@@ -330,6 +326,7 @@ export function MailDesk() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [readFilter, setReadFilter] = useState<"all" | "unread" | "read">("all");
   const fileRef = useRef<HTMLInputElement>(null);
+  const openLink = useRef<() => void>(() => {});
   const searchRef = useRef<HTMLInputElement>(null);
   const place = describe(view);
   const placeRef = useRef(place);
@@ -849,6 +846,9 @@ export function MailDesk() {
                 <Tool label="Adjuntar" onClick={() => fileRef.current?.click()}>
                   <Icon name="clip" />
                 </Tool>
+                <Tool label="Enlace" onMouseDown={() => openLink.current()}>
+                  <Icon name="link" />
+                </Tool>
                 <span className="ml-auto text-[0.68rem] text-ash">{phase}</span>
                 <button type="submit" aria-label="Enviar" title="Enviar" disabled={sending} className="grid size-8 place-items-center rounded-full text-ink hover:bg-ink/5 disabled:opacity-30">
                   <Icon name="send" />
@@ -881,6 +881,7 @@ export function MailDesk() {
                   key={compose.draft}
                   initial={compose.text}
                   onChange={(value) => setCompose((current) => (current ? { ...current, text: value } : current))}
+                  bindLink={(open) => { openLink.current = open; }}
                 />
                 <input
                   ref={fileRef}
