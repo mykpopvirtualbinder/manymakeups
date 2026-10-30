@@ -286,7 +286,7 @@ function ComposeBody({ initial, onChange }: { initial: string; onChange: (value:
       {hint ? <p className="mb-2 text-sm text-ink">{hint}</p> : null}
       <div
         ref={ref}
-        className="field min-h-48 whitespace-pre-wrap leading-relaxed [&_a]:text-ink [&_a]:underline"
+        className="field min-h-48 whitespace-pre-wrap font-sans text-base leading-relaxed [&_a]:text-ink [&_a]:underline"
         contentEditable
         role="textbox"
         aria-multiline="true"

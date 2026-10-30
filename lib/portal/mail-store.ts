@@ -6,7 +6,7 @@ import { simpleParser, type AddressObject } from "mailparser";
 import { newId } from "./crypto";
 import { site } from "@/lib/site";
 import { MAILBOXES, SIGNATURE_BACKGROUND, mailboxByKey, mailboxFromRecipients, type MailFolder, type MailboxKey } from "./mailboxes";
-import { messageToHtml, messageToPlain } from "./mail-text";
+import { MAIL_FONT, messageToHtml, messageToPlain } from "./mail-text";
 
 const ROOT = path.join(process.cwd(), "data");
 const MAX_STORED_FILES = 12;
@@ -214,7 +214,13 @@ function signaturePath(account: MailboxKey) {
 
 function letterHtml(account: MailboxKey, message: string, src: string) {
   const box = mailboxByKey(account);
-  return `<div style="margin:0;padding:20px 0 36px;background:${SIGNATURE_BACKGROUND};text-align:left;"><div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#1a1613;text-align:justify;text-align-last:left;white-space:pre-wrap;">${messageToHtml(message)}</div><img src="${src}" alt="Ana Zarza · ${box?.address || "Many Makeups"}" width="${SIGNATURE_WIDTH}" height="${SIGNATURE_HEIGHT}" style="display:block;border:0;width:${SIGNATURE_WIDTH}px;max-width:100%;height:auto;margin:22px 0 0;background:${SIGNATURE_BACKGROUND};" /></div>`;
+  const type = `font-family:${MAIL_FONT};font-size:16px;line-height:1.65;color:#1a1613;text-align:left;`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${SIGNATURE_BACKGROUND};"><tr><td style="padding:28px 24px 40px;${type}"><div style="${type}white-space:pre-wrap;">${messageToHtml(message)}</div><img src="${src}" alt="Ana Zarza · ${box?.address || "Many Makeups"}" width="${SIGNATURE_WIDTH}" height="${SIGNATURE_HEIGHT}" style="display:block;border:0;width:${SIGNATURE_WIDTH}px;max-width:100%;height:auto;margin:28px 0 0;background:${SIGNATURE_BACKGROUND};" /></td></tr></table>`;
+}
+
+function mailDocument(letter: string) {
+  const face = `@font-face{font-family:Outfit;font-style:normal;font-weight:400;src:url('${site.url}/brand/fonts/outfit-400.woff2') format('woff2');}`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>${face}</style></head><body style="margin:0;padding:0;background:${SIGNATURE_BACKGROUND};font-family:${MAIL_FONT};">${letter}</body></html>`;
 }
 
 export function inboundAuthorized(header: string | null, secret: string) {
@@ -508,7 +514,7 @@ export async function sendMail(input: {
       reply_to: box.address,
       subject,
       text: `${message}\n\nAna Zarza\nMany Makeups\n${box.address}\n${site.phoneDisplay}`,
-      html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:${SIGNATURE_BACKGROUND};">${letter}</body></html>`,
+      html: mailDocument(letter),
       ...(attachments.length ? { attachments } : {}),
       ...(inReplyTo ? { headers: { "In-Reply-To": inReplyTo, References: inReplyTo } } : {}),
     }),

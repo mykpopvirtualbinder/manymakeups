@@ -1,5 +1,7 @@
 const LINK = /\[\[([^\[\]\n]{1,300})\]\]\((https?:\/\/[^\s)]{1,2000})\)/g;
 
+export const MAIL_FONT = "Outfit,'Avenir Next',Avenir,'Century Gothic','Trebuchet MS',sans-serif";
+
 export function cleanUrl(value: string) {
   const raw = value.trim();
   if (!raw) return "";
@@ -28,7 +30,7 @@ export function messageToHtml(message: string) {
     html += escapeHtml(message.slice(last, index));
     const href = cleanUrl(match[2]);
     if (!href) html += escapeHtml(match[0]);
-    else html += `<a href="${escapeAttr(href)}" style="color:#1a1613;text-decoration:underline;">${escapeHtml(match[1])}</a>`;
+    else html += `<a href="${escapeAttr(href)}" style="font-family:${MAIL_FONT};color:#1a1613;text-decoration:underline;">${escapeHtml(match[1])}</a>`;
     last = index + match[0].length;
   }
   html += escapeHtml(message.slice(last));
