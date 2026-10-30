@@ -1,6 +1,7 @@
 "use client";
 
 import { BINDER_MAILBOX, HOTMAIL_MAILBOX, MAILBOXES, type MailboxKey, type MailFolder } from "@/lib/portal/mailboxes";
+import { cleanUrl, messageToPlain } from "@/lib/portal/mail-text";
 
 type DeskKey = MailboxKey | "binder" | "hotmail";
 const ACCOUNTS = [...MAILBOXES, BINDER_MAILBOX, HOTMAIL_MAILBOX];
@@ -133,6 +134,9 @@ function Icon({ name }: { name: string }) {
   if (name === "clip") {
     return <svg {...common}><path d="m15 7-6.5 6.5a3 3 0 0 0 4.2 4.2L19 11.5" /><path d="m8.5 13.5-2 2a3.5 3.5 0 0 0 5 5L17 15" /></svg>;
   }
+  if (name === "link") {
+    return <svg {...common}><path d="M10 13a5 5 0 0 0 7.1.4l2.1-2.1a5 5 0 0 0-7.1-7.1L11 5.3" /><path d="M14 11a5 5 0 0 0-7.1-.4l-2.1 2.1a5 5 0 0 0 7.1 7.1L13 18.7" /></svg>;
+  }
   if (name === "inbox") {
     return <svg {...common}><path d="M3 12h5l2 3h4l2-3h5" /><path d="M5 6h14l2 6v7H3v-7Z" /></svg>;
   }
@@ -148,18 +152,162 @@ function Icon({ name }: { name: string }) {
   return <svg {...common}><path d="M15 18H5V6h10" /><path d="m12 9 4 3-4 3" /></svg>;
 }
 
-function Tool({ label, onClick, disabled, active, children }: { label: string; onClick?: () => void; disabled?: boolean; active?: boolean; children: React.ReactNode }) {
+function Tool({ label, onClick, onMouseDown, disabled, active, children }: { label: string; onClick?: () => void; onMouseDown?: () => void; disabled?: boolean; active?: boolean; children: React.ReactNode }) {
   return (
     <button
       type="button"
       aria-label={label}
       title={label}
       disabled={disabled}
+      onMouseDown={onMouseDown ? (event) => { event.preventDefault(); onMouseDown(); } : undefined}
       onClick={onClick}
       className={`grid size-8 place-items-center rounded-full disabled:opacity-30 ${active ? "bg-ink text-porcelain" : "text-ink hover:bg-ink/5"}`}
     >
       {children}
     </button>
+  );
+}
+
+function serializeMessage(root: HTMLElement | null) {
+  if (!root) return "";
+  function walk(node: Node): string {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent || "";
+    if (!(node instanceof HTMLElement)) return "";
+    if (node.tagName === "BR") return "\n";
+    if (node.tagName === "A") {
+      const href = cleanUrl(node.getAttribute("href") || "");
+      const label = Array.from(node.childNodes).map(walk).join("").replace(/\s+/g, " ").trim().replace(/[\[\]]/g, "");
+      if (!href || !label) return label;
+      return `[[${label}]](${href})`;
+    }
+    const inner = Array.from(node.childNodes).map(walk).join("");
+    if (node.tagName === "DIV" || node.tagName === "P") return `\n${inner}`;
+    return inner;
+  }
+  return Array.from(root.childNodes).map(walk).join("").replace(/^\n+/, "").replace(/\n+$/, "");
+}
+
+function ComposeBody({ initial, onChange }: { initial: string; onChange: (value: string) => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const initialRef = useRef(initial);
+  const rangeRef = useRef<Range | null>(null);
+  const [asking, setAsking] = useState(false);
+  const [url, setUrl] = useState("https://");
+  const [label, setLabel] = useState("");
+  const [hint, setHint] = useState("");
+
+  useEffect(() => {
+    if (ref.current) ref.current.textContent = initialRef.current;
+  }, []);
+
+  function publish() {
+    onChange(serializeMessage(ref.current));
+  }
+
+  function rememberSelection() {
+    const selection = window.getSelection();
+    const root = ref.current;
+    if (!selection || !root || selection.rangeCount === 0 || selection.isCollapsed) {
+      setHint("Selecciona primero la palabra que será el enlace.");
+      setAsking(false);
+      return;
+    }
+    const range = selection.getRangeAt(0);
+    if (!root.contains(range.commonAncestorContainer)) {
+      setHint("Selecciona primero la palabra que será el enlace.");
+      setAsking(false);
+      return;
+    }
+    const words = range.toString().replace(/\s+/g, " ").trim();
+    if (!words) {
+      setHint("Selecciona primero la palabra que será el enlace.");
+      setAsking(false);
+      return;
+    }
+    rangeRef.current = range.cloneRange();
+    setLabel(words);
+    setUrl("https://");
+    setHint("");
+    setAsking(true);
+  }
+
+  function applyLink() {
+    const range = rangeRef.current;
+    const href = cleanUrl(url);
+    if (!range) return;
+    if (!href) {
+      setHint("La dirección tiene que ser una web, por ejemplo https://…");
+      return;
+    }
+    const words = range.toString().replace(/\s+/g, " ").trim().replace(/[\[\]]/g, "");
+    if (!words) return;
+    const anchor = document.createElement("a");
+    anchor.href = href;
+    anchor.textContent = words;
+    range.deleteContents();
+    range.insertNode(anchor);
+    setAsking(false);
+    setHint("");
+    publish();
+  }
+
+  return (
+    <div className="mt-4">
+      <div className="mb-2 flex items-center gap-2">
+        <Tool label="Enlace" onMouseDown={rememberSelection}>
+          <Icon name="link" />
+        </Tool>
+        <span className="text-[0.68rem] text-ash">Selecciona una palabra y pulsa el enlace.</span>
+      </div>
+      {asking ? (
+        <div className="mb-2 flex flex-wrap items-end gap-2">
+          <label className="min-w-0 flex-1 text-sm text-ink">
+            Enlace para «{label}»
+            <input
+              className="field"
+              value={url}
+              autoFocus
+              inputMode="url"
+              aria-label="Dirección del enlace"
+              onChange={(event) => setUrl(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  applyLink();
+                }
+              }}
+            />
+          </label>
+          <button type="button" className="rounded-full bg-ink px-4 py-2 text-sm text-porcelain" onClick={applyLink}>
+            Crear enlace
+          </button>
+        </div>
+      ) : null}
+      {hint ? <p className="mb-2 text-sm text-ink">{hint}</p> : null}
+      <div
+        ref={ref}
+        className="field min-h-48 whitespace-pre-wrap leading-relaxed [&_a]:text-ink [&_a]:underline"
+        contentEditable
+        role="textbox"
+        aria-multiline="true"
+        aria-label="Mensaje"
+        onInput={publish}
+        onPaste={(event) => {
+          event.preventDefault();
+          const text = event.clipboardData.getData("text/plain");
+          const selection = window.getSelection();
+          if (!selection || selection.rangeCount === 0) return;
+          const range = selection.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(document.createTextNode(text));
+          range.collapse(false);
+          publish();
+        }}
+        onClick={(event) => {
+          if ((event.target as HTMLElement).closest("a")) event.preventDefault();
+        }}
+      />
+    </div>
   );
 }
 
@@ -174,7 +322,7 @@ export function MailDesk() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [connect, setConnect] = useState("");
-  const [compose, setCompose] = useState<{ from: DeskKey; to: string; subject: string; text: string; inReplyTo: string; forwardId: string; replyId: string; replyAll: boolean; forwardFiles: MailFile[] } | null>(null);
+  const [compose, setCompose] = useState<{ from: DeskKey; to: string; subject: string; text: string; draft: number; inReplyTo: string; forwardId: string; replyId: string; replyAll: boolean; forwardFiles: MailFile[] } | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [phase, setPhase] = useState("");
@@ -366,7 +514,7 @@ export function MailDesk() {
     const box = ACCOUNTS.find((item) => item.key === from) ?? MAILBOXES[0];
     if (kind === "new" || !selected) {
       setSelected(null);
-      setCompose({ from, to: "", subject: "", text: "", inReplyTo: "", forwardId: "", replyId: "", replyAll: false, forwardFiles: [] });
+      setCompose({ from, to: "", subject: "", text: "", draft: Date.now(), inReplyTo: "", forwardId: "", replyId: "", replyAll: false, forwardFiles: [] });
       return;
     }
     if (kind === "forward") {
@@ -375,6 +523,7 @@ export function MailDesk() {
         to: "",
         subject: selected.subject.startsWith("Fwd:") ? selected.subject : `Fwd: ${selected.subject}`,
         text: quoteForward(selected),
+        draft: Date.now(),
         inReplyTo: "",
         forwardId: selected.id,
         replyId: "",
@@ -393,6 +542,7 @@ export function MailDesk() {
       to: kind === "reply-all" && everyone.length ? everyone.join(", ") : replyTo,
       subject: selected.subject.startsWith("Re:") ? selected.subject : `Re: ${selected.subject}`,
       text: "",
+      draft: Date.now(),
       inReplyTo: selected.messageId,
       forwardId: "",
       replyId: selected.account === "hotmail" ? selected.id : "",
@@ -439,7 +589,7 @@ export function MailDesk() {
             account: compose.from,
             to: compose.to,
             subject: compose.subject,
-            text: compose.text,
+            text: outside ? messageToPlain(compose.text) : compose.text,
             inReplyTo: compose.inReplyTo,
             forwardId: compose.forwardId,
             files: sent,
@@ -450,7 +600,7 @@ export function MailDesk() {
         form.set("account", compose.from);
         form.set("to", compose.to);
         form.set("subject", compose.subject);
-        form.set("text", compose.text);
+        form.set("text", outside ? messageToPlain(compose.text) : compose.text);
         form.set("inReplyTo", compose.inReplyTo);
         form.set("forwardId", compose.forwardId);
         form.set("replyId", compose.replyId);
@@ -727,11 +877,10 @@ export function MailDesk() {
                   Asunto
                   <input className="field" value={compose.subject} onChange={(event) => setCompose({ ...compose, subject: event.target.value })} />
                 </label>
-                <textarea
-                  className="field mt-4 min-h-48"
-                  aria-label="Mensaje"
-                  value={compose.text}
-                  onChange={(event) => setCompose({ ...compose, text: event.target.value })}
+                <ComposeBody
+                  key={compose.draft}
+                  initial={compose.text}
+                  onChange={(value) => setCompose((current) => (current ? { ...current, text: value } : current))}
                 />
                 <input
                   ref={fileRef}
