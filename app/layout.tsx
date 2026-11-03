@@ -66,10 +66,10 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     icons: {
       icon: [
-        { url: "/favicon.ico?v=3", sizes: "48x48" },
-        { url: "/icon.png?v=3", type: "image/png", sizes: "512x512" },
+        { url: "/favicon.ico?v=4", sizes: "48x48" },
+        { url: "/icon.png?v=4", type: "image/png", sizes: "512x512" },
       ],
-      apple: [{ url: "/apple-icon.png?v=3", sizes: "180x180" }],
+      apple: [{ url: "/apple-icon.png?v=4", sizes: "180x180" }],
     },
     twitter: {
       card: "summary_large_image",
