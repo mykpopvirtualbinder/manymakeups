@@ -25,7 +25,7 @@ export const HOTMAIL_MAILBOX = {
 export const SIGNATURE_BACKGROUND = "#f4f1ea";
 
 export type MailboxKey = (typeof MAILBOXES)[number]["key"];
-export type MailFolder = "inbox" | "sent" | "archive" | "trash";
+export type MailFolder = "inbox" | "sent" | "archive" | "junk" | "trash";
 
 export function mailboxByKey(key: string) {
   return MAILBOXES.find((box) => box.key === key) ?? null;

@@ -41,12 +41,14 @@ type View =
   | { id: "global-inbox" }
   | { id: "all-inbox"; account: DeskKey }
   | { id: "all-sent" }
+  | { id: "all-junk" }
   | { id: "all-trash" }
   | { id: "box"; account: DeskKey; folder: MailFolder };
 
 function describe(next: View): { account: DeskKey | "all"; folder: MailFolder } {
   if (next.id === "global-inbox") return { account: "all", folder: "inbox" };
   if (next.id === "all-sent") return { account: "all", folder: "sent" };
+  if (next.id === "all-junk") return { account: "all", folder: "junk" };
   if (next.id === "all-trash") return { account: "all", folder: "trash" };
   if (next.id === "all-inbox") return { account: next.account, folder: "inbox" };
   return { account: next.account, folder: next.folder };
@@ -55,6 +57,7 @@ function describe(next: View): { account: DeskKey | "all"; folder: MailFolder } 
 function viewMark(next: View) {
   if (next.id === "global-inbox") return "global-inbox";
   if (next.id === "all-sent") return "all-sent";
+  if (next.id === "all-junk") return "all-junk";
   if (next.id === "all-trash") return "all-trash";
   if (next.id === "all-inbox") return `all-inbox:${next.account}`;
   return `box:${next.account}:${next.folder}`;
@@ -109,6 +112,9 @@ function Icon({ name }: { name: string }) {
   }
   if (name === "archive") {
     return <svg {...common}><path d="M3 6h18v4H3z" /><path d="M5 10v8h14v-8" /><path d="M10 14h4" /></svg>;
+  }
+  if (name === "junk") {
+    return <svg {...common}><circle cx="12" cy="12" r="8" /><path d="m7 7 10 10" /></svg>;
   }
   if (name === "reply") {
     return <svg {...common}><path d="M9 14 4 9l5-5" /><path d="M4 9h10a6 6 0 0 1 6 6v1" /></svg>;
@@ -696,6 +702,14 @@ export function MailDesk() {
               </button>
               <button
                 type="button"
+                onClick={() => openView({ id: "all-junk" })}
+                className={`flex items-center gap-2 rounded-lg px-2 py-1 text-left text-sm ${view.id === "all-junk" ? "bg-ink/10" : "hover:bg-ink/5"}`}
+              >
+                <span className="text-ash"><Icon name="junk" /></span>
+                <span className="min-w-0 flex-1 truncate">No deseados</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => openView({ id: "all-trash" })}
                 className={`flex items-center gap-2 rounded-lg px-2 py-1 text-left text-sm ${view.id === "all-trash" ? "bg-ink/10" : "hover:bg-ink/5"}`}
               >
@@ -761,6 +775,9 @@ export function MailDesk() {
             ) : null}
             <Tool label={place.folder === "archive" ? "Mover a entrada" : "Archivar"} disabled={!picked.length} onClick={() => void post("move", picked, { destination: place.folder === "archive" ? "inbox" : "archive" })}>
               <Icon name={place.folder === "archive" ? "inbox" : "archive"} />
+            </Tool>
+            <Tool label={place.folder === "junk" ? "Mover a entrada" : "No deseados"} disabled={!picked.length} onClick={() => void post("move", picked, { destination: place.folder === "junk" ? "inbox" : "junk" })}>
+              <Icon name={place.folder === "junk" ? "inbox" : "junk"} />
             </Tool>
             <Tool label={place.folder === "trash" ? "Borrar" : "Papelera"} disabled={!picked.length} onClick={() => void post("delete", picked)}>
               <Icon name="trash" />
@@ -941,6 +958,12 @@ export function MailDesk() {
                 >
                   <Icon name={place.folder === "archive" ? "inbox" : "archive"} />
                 </Tool>
+                <Tool
+                  label={place.folder === "junk" ? "Mover a entrada" : "No deseados"}
+                  onClick={() => void post("move", [selected.id], { destination: place.folder === "junk" ? "inbox" : "junk" })}
+                >
+                  <Icon name={place.folder === "junk" ? "inbox" : "junk"} />
+                </Tool>
                 <Tool label={place.folder === "trash" ? "Borrar" : "Papelera"} onClick={() => void post("delete", [selected.id])}>
                   <Icon name="trash" />
                 </Tool>
@@ -972,7 +995,7 @@ export function MailDesk() {
                       >
                         {file.contentType.startsWith("image/") ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img alt="" className="mb-2 h-20 w-full object-cover" src={`/api/admin/mail?account=${selected.account}&id=${selected.id}&file=${file.id}`} />
+                          <img alt="" className="mb-2 max-h-40 w-full object-contain" src={`/api/admin/mail?account=${selected.account}&id=${selected.id}&file=${file.id}`} />
                         ) : null}
                         <span className="block truncate">{file.filename}</span>
                         <span className="mt-1 block text-[0.68rem] text-ash">{formatSize(file.size)}</span>

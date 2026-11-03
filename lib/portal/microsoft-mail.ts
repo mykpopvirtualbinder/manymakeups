@@ -21,6 +21,7 @@ const FOLDER_ID: Record<MailFolder, string> = {
   inbox: "inbox",
   sent: "sentitems",
   archive: "archive",
+  junk: "junkemail",
   trash: "deleteditems",
 };
 
@@ -201,6 +202,40 @@ function stripHtml(html: string) {
     .slice(0, 500_000);
 }
 
+function replaceCid(html: string, cid: string, data: string) {
+  const token = cid.replace(/^<|>$/g, "").trim();
+  if (!token || token.length > 200) return html;
+  const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return html.replace(new RegExp(`cid:${escaped}(?![A-Za-z0-9@._+-])`, "g"), data);
+}
+
+async function embedInlineImages(
+  messageId: string,
+  html: string,
+  files: Array<{ id?: string; name?: string; contentType?: string; size?: number; isInline?: boolean; contentId?: string }>,
+) {
+  const used = new Set<string>();
+  if (!html.includes("cid:")) return { html, used };
+  const inline = files
+    .filter((file) => file.id && (file.contentType || "").startsWith("image/") && (file.size || 0) > 0 && (file.size || 0) <= 1_200_000)
+    .slice(0, 4);
+  let next = html;
+  for (const file of inline) {
+    const full = await graphJson<{ contentId?: string; contentType?: string; contentBytes?: string; name?: string }>(
+      `/me/messages/${encodeURIComponent(messageId)}/attachments/${encodeURIComponent(file.id || "")}`,
+    );
+    const type = (full.contentType || file.contentType || "").toLowerCase();
+    if (!full.contentBytes || !/^image\/[a-z0-9.+-]+$/.test(type)) continue;
+    const data = `data:${type};base64,${full.contentBytes}`;
+    const before = next;
+    for (const name of [full.contentId, file.contentId, full.name, file.name]) {
+      next = replaceCid(next, String(name || ""), data);
+    }
+    if (next !== before && file.id) used.add(file.id);
+  }
+  return { html: next, used };
+}
+
 export async function finishLogin(code: string, verifier: string) {
   const json = await tokenRequest(new URLSearchParams({ grant_type: "authorization_code", code, code_verifier: verifier }));
   if (!json.refresh_token || !json.access_token) fail("NOT_CONNECTED");
@@ -253,16 +288,18 @@ export async function readHotmail(id: string) {
       body: JSON.stringify({ isRead: true }),
     }).catch(() => undefined);
   }
-  const files = row.hasAttachments
-    ? await graphJson<{ value?: Array<{ id?: string; name?: string; contentType?: string; size?: number; isInline?: boolean }> }>(`/me/messages/${encodeURIComponent(id)}/attachments?$select=id,name,contentType,size,isInline`)
+  const rawHtml = row.body?.contentType === "html" ? row.body.content || "" : "";
+  const files = row.hasAttachments || rawHtml.includes("cid:")
+    ? await graphJson<{ value?: Array<{ id?: string; name?: string; contentType?: string; size?: number; isInline?: boolean; contentId?: string }> }>(`/me/messages/${encodeURIComponent(id)}/attachments?$select=id,name,contentType,size,isInline,contentId`)
     : { value: [] };
-  const attachments = (files.value || []).filter((file) => file.id && !file.isInline).map((file) => ({
+  const embedded = rawHtml ? await embedInlineImages(id, stripHtml(rawHtml), files.value || []) : { html: "", used: new Set<string>() };
+  const attachments = (files.value || []).filter((file) => file.id && !file.isInline && !embedded.used.has(file.id || "")).map((file) => ({
     id: file.id || "",
     filename: file.name || "adjunto",
     contentType: file.contentType || "application/octet-stream",
     size: file.size || 0,
   }));
-  const html = row.body?.contentType === "html" ? stripHtml(row.body.content || "") : "";
+  const html = embedded.html;
   const text = row.body?.contentType === "html" ? "" : (row.body?.content || "");
   return { ...summary({ ...row, isRead: true, hasAttachments: attachments.length > 0 }, "inbox"), files: attachments.length, text, html, inReplyTo: "", attachments };
 }
@@ -292,7 +329,7 @@ export async function hotmailAct(body: { action?: string; ids?: string[]; seen?:
     return;
   }
   if (body.action === "move") {
-    const destination = body.destination === "inbox" ? "inbox" : body.destination === "archive" ? "archive" : body.destination === "trash" ? "deleteditems" : "";
+    const destination = body.destination === "inbox" ? "inbox" : body.destination === "archive" ? "archive" : body.destination === "junk" ? "junkemail" : body.destination === "trash" ? "deleteditems" : "";
     if (!destination) fail("BAD_FOLDER");
     for (const id of ids) {
       await graphJson(`/me/messages/${encodeURIComponent(id)}/move`, {

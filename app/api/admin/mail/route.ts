@@ -29,7 +29,7 @@ function sendResult(stored: boolean) {
 }
 
 function parseFolder(value: string | null | undefined): MailFolder | null {
-  if (value === "inbox" || value === "sent" || value === "archive" || value === "trash") return value;
+  if (value === "inbox" || value === "sent" || value === "archive" || value === "junk" || value === "trash") return value;
   return null;
 }
 
