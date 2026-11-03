@@ -34,9 +34,12 @@ export default async function PrivacidadPage() {
         <h2>2. Datos que recabo y para qué</h2>
         <p>
           Si escribes el formulario, usas WhatsApp o reservas cita, trato el
-          nombre, correo, teléfono, fecha del evento, tipo de servicio y el
-          mensaje que me dejes, para responderte, valorar el encargo y, si
-          hay acuerdo, prestar el servicio. Si te abro un acceso al área de
+          nombre, correo, teléfono, fecha del evento, localidad donde se
+          realiza el servicio, tipo de servicio y el mensaje que me dejes,
+          para responderte, valorar el encargo y, si
+          hay acuerdo, prestar el servicio. Al enviar el formulario también
+          queda una localidad aproximada de la conexión (ciudad y país), solo
+          para saber desde dónde se escribió. Si te abro un acceso al área de
           clientes, trato además la contraseña (solo en forma cifrada), la ficha
           del evento, las fotos de inspiración y los documentos del encargo,
           para organizar tu fecha y que tengas contrato y presupuestos a

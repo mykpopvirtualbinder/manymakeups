@@ -5,6 +5,7 @@ type ContactBody = {
   email: string;
   telefono: string;
   fecha: string;
+  localidad: string;
   tipo: string;
   mensaje: string;
   honey: string;
@@ -36,13 +37,27 @@ function isFormSubmitAccepted(payload: FormSubmitPayload | null) {
   );
 }
 
+function headerPlace(request: Request) {
+  function piece(name: string) {
+    const raw = request.headers.get(name) || "";
+    try {
+      return decodeURIComponent(raw).replace(/\+/g, " ").trim();
+    } catch {
+      return raw.trim();
+    }
+  }
+  return [piece("x-vercel-ip-city"), piece("x-vercel-ip-country")].filter(Boolean).join(", ");
+}
+
 function formSubmitBody(data: {
   nombre: string;
   email: string;
   telefono: string;
   fecha: string;
+  localidad: string;
   tipo: string;
   mensaje: string;
+  origen: string;
 }) {
   const text = [
     "Nueva consulta desde manymakeups.com",
@@ -51,7 +66,9 @@ function formSubmitBody(data: {
     `Email: ${data.email}`,
     `Teléfono: ${data.telefono}`,
     `Servicio: ${data.tipo}`,
+    `Localidad del servicio: ${data.localidad}`,
     data.fecha && `Fecha del evento: ${data.fecha}`,
+    data.origen && `Conexión aproximada: ${data.origen}`,
     data.mensaje && `Consulta: ${data.mensaje}`,
   ]
     .filter(Boolean)
@@ -66,7 +83,9 @@ function formSubmitBody(data: {
     email: data.email,
     telefono: data.telefono,
     servicio: data.tipo,
+    localidad: data.localidad,
     fecha_evento: data.fecha || "No indicada",
+    conexion: data.origen || "No disponible",
     consulta: data.mensaje || "Sin texto",
     message: text,
   };
@@ -89,10 +108,11 @@ export async function POST(request: Request) {
   const email = readString(data.email);
   const telefono = readString(data.telefono);
   const fecha = readString(data.fecha);
+  const localidad = readString(data.localidad).slice(0, 120);
   const tipo = readString(data.tipo);
   const mensaje = readString(data.mensaje);
 
-  if (!nombre || !email || !telefono || !isKind(tipo)) {
+  if (!nombre || !email || !telefono || !localidad || !isKind(tipo)) {
     return Response.json({ ok: false }, { status: 400 });
   }
 
@@ -107,7 +127,16 @@ export async function POST(request: Request) {
       Accept: "application/json",
     },
     body: JSON.stringify(
-      formSubmitBody({ nombre, email, telefono, fecha, tipo, mensaje }),
+      formSubmitBody({
+        nombre,
+        email,
+        telefono,
+        fecha,
+        localidad,
+        tipo,
+        mensaje,
+        origen: headerPlace(request),
+      }),
     ),
   });
 

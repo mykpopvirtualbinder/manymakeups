@@ -89,6 +89,7 @@ export type Messages = {
     email: string;
     phone: string;
     date: string;
+    place: string;
     kind: string;
     message: string;
     kinds: string[];
@@ -266,6 +267,7 @@ export const es: Messages = {
     email: "Email",
     phone: "Teléfono",
     date: "Fecha del evento",
+    place: "Localidad donde se realiza el servicio",
     kind: "¿Qué buscas?",
     message: "Escribe tu consulta",
     kinds: [
@@ -602,6 +604,7 @@ export const en: Messages = {
     email: "Email",
     phone: "Phone",
     date: "Event date",
+    place: "Town where the service takes place",
     kind: "What are you looking for?",
     message: "Write your enquiry",
     kinds: [
@@ -937,6 +940,7 @@ export const fr: Messages = {
     email: "Email",
     phone: "Téléphone",
     date: "Date de l’événement",
+    place: "Lieu où a lieu le service",
     kind: "Que cherches-tu ?",
     message: "Écris ta demande",
     kinds: [

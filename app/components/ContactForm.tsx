@@ -12,6 +12,7 @@ function readForm(form: HTMLFormElement) {
     email: String(data.get("email") ?? "").trim(),
     telefono: String(data.get("telefono") ?? "").trim(),
     fecha: String(data.get("fecha") ?? "").trim(),
+    localidad: String(data.get("localidad") ?? "").trim(),
     tipo: String(data.get("tipo") ?? "").trim(),
     mensaje: String(data.get("mensaje") ?? "").trim(),
     honey: String(data.get("company") ?? "").trim(),
@@ -49,6 +50,7 @@ function submitPayload(fields: ReturnType<typeof readForm>) {
     `Email: ${fields.email}`,
     `Teléfono: ${fields.telefono}`,
     `Servicio: ${fields.tipo}`,
+    `Localidad del servicio: ${fields.localidad}`,
     fields.fecha && `Fecha del evento: ${fields.fecha}`,
     fields.mensaje && `Consulta: ${fields.mensaje}`,
   ]
@@ -64,6 +66,7 @@ function submitPayload(fields: ReturnType<typeof readForm>) {
     email: fields.email,
     telefono: fields.telefono,
     servicio: fields.tipo,
+    localidad: fields.localidad,
     fecha_evento: fields.fecha || "No indicada",
     consulta: fields.mensaje || "Sin texto",
     message: text,
@@ -128,6 +131,7 @@ export function ContactForm() {
       `${t.contact.email}: ${fields.email}`,
       `${t.contact.phone}: ${fields.telefono}`,
       `${t.contact.kind}: ${fields.tipo}`,
+      `${t.contact.place}: ${fields.localidad}`,
       fields.fecha && `${t.contact.date}: ${fields.fecha}`,
       fields.mensaje && `${t.contact.message}: ${fields.mensaje}`,
     ]
@@ -188,7 +192,7 @@ export function ContactForm() {
         });
         return;
       }
-      const result = (await sendDirect(fields).catch(() => null)) ?? (await sendViaApi(fields));
+      const result = (await sendViaApi(fields).catch(() => null)) ?? (await sendDirect(fields));
       if (!result) {
         setNotice({
           title: t.contact.errorTitle,
@@ -253,6 +257,17 @@ export function ContactForm() {
             />
           </label>
         </div>
+        <label className="field-label">
+          {t.contact.place}
+          <input
+            className="field"
+            name="localidad"
+            type="text"
+            required
+            autoComplete="address-level2"
+            maxLength={120}
+          />
+        </label>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="field-label">
             {t.contact.date}
