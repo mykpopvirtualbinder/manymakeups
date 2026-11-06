@@ -28,6 +28,7 @@ export async function createHold(input: { amount: number; email: string; orderId
     description: `Pedido ${input.number} Many Makeups`,
     metadata: { orderId: input.orderId, orderNumber: input.number },
     automatic_payment_methods: { enabled: true },
+    payment_method_configuration: "pmc_1UYnBSETChKQL24i00sBEea9",
   });
 }
 
