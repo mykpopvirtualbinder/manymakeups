@@ -101,7 +101,7 @@ export default async function StudioOrderPage({
                       </a>
                     ) : null}
                   </div>
-                  <p>{formatMoney(line.lineChargeCents)}</p>
+                  <p className={stock === "no" ? "text-ash line-through" : undefined}>{formatMoney(line.lineChargeCents)}</p>
                 </div>
                 {open ? (
                   <form action="/api/admin/shop" method="post" className="flex flex-wrap gap-2">
@@ -133,14 +133,14 @@ export default async function StudioOrderPage({
           })}
         </ul>
         <p className="mt-4 font-serif text-3xl">
-          {open ? "Reserva" : order.status === "cancelled" ? "Anulado" : "Cobrado"} {formatMoney(order.totalCents)}
+          {open ? "Total" : order.status === "cancelled" ? "Anulado" : "Cobrado"}{" "}
+          {formatMoney(open ? Math.max(0, order.totalCents - charge.droppedCents) : order.totalCents)}
           {order.shippingChargeCents ? ` · envío ${formatMoney(order.shippingChargeCents)}` : " · envío gratis"}
         </p>
-        {open && !charge.pending && charge.quote ? (
+        {open && charge.droppedCents > 0 ? (
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-ash">
-            Se cobrarán {formatMoney(charge.captureCents)}
-            {charge.quote.shippingChargeCents ? `, envío incluido ${formatMoney(charge.quote.shippingChargeCents)}` : ", envío gratis"}.
-            {charge.kept.length < order.lines.length ? " El resto de la reserva se libera." : ""}
+            Anulado {formatMoney(charge.droppedCents)}. El total ya lo descuenta.
+            {charge.pending ? "" : ` Al finalizar se cobra ${formatMoney(charge.captureCents)}.`}
           </p>
         ) : null}
         <div className="mt-8 flex max-w-xl flex-col gap-6">

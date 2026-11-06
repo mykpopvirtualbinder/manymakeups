@@ -20,7 +20,7 @@ export async function SiteFooter({ compact = false }: { compact?: boolean }) {
 
   return (
     <footer className="border-t border-ink/10">
-      <div className={`mx-auto flex max-w-[1120px] flex-col text-[0.7rem] uppercase tracking-[0.18em] text-ash sm:flex-row sm:items-center sm:justify-between ${compact ? "gap-2 px-4 py-3 md:px-10" : "gap-4 px-6 py-8 md:px-10"}`}>
+      <div className={`mx-auto hidden max-w-[1120px] text-[0.7rem] uppercase tracking-[0.18em] text-ash md:flex md:flex-row md:items-center md:justify-between ${compact ? "gap-2 px-4 py-3 md:px-10" : "gap-4 px-6 py-8 md:px-10"}`}>
         <div className="flex items-center gap-3">
           <BrandLogo size="footer" className={compact ? "size-10" : undefined} />
           <div>
@@ -40,22 +40,40 @@ export async function SiteFooter({ compact = false }: { compact?: boolean }) {
           </a>
         </div>
       </div>
-      <div className="border-t border-ink/10 bg-linen/50">
-        <div className={`mx-auto flex max-w-[1120px] flex-wrap items-center justify-between gap-x-8 md:px-10 ${compact ? "gap-y-2 px-4 py-3" : "gap-y-4 px-6 py-5"}`}>
-          <nav className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-ink" aria-label={t.footer.legal}>
+      <div className="bg-linen/50 md:border-t md:border-ink/10">
+        <div className={`mx-auto flex max-w-[1120px] flex-col gap-4 md:flex-row md:flex-wrap md:items-center md:justify-between md:px-10 ${compact ? "px-4 py-3" : "px-6 py-4 md:gap-y-4 md:py-5"}`}>
+          <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-ink md:gap-x-6 md:gap-y-3 md:text-sm" aria-label={t.footer.legal}>
             {links.map((item) => (
               <a key={item.href} className="underline-offset-4 hover:underline" href={item.href}>
                 {item.label}
               </a>
             ))}
           </nav>
+          <div className="flex items-center gap-3 md:hidden">
+            <BrandLogo size="footer" className="size-10" />
+            <div className="min-w-0 text-[0.68rem] normal-case leading-snug tracking-normal text-ash">
+              <p className="text-ink">{site.legalName}</p>
+              <p>
+                {site.streetAddress} · {site.postalCode} {site.city}
+              </p>
+              <p>
+                <a className="hover:text-ink" href={`mailto:${site.email}`}>
+                  {site.email}
+                </a>
+                {" · "}
+                <a className="hover:text-ink" href={`tel:${site.phone}`}>
+                  {site.phoneDisplay}
+                </a>
+              </p>
+            </div>
+          </div>
           <Image
             src="/brand/footer/logo-omyo.png"
             alt="Omyo Creator Lab"
             width={226}
             height={100}
             sizes="160px"
-            className={compact ? "h-9 w-auto" : "h-14 w-auto"}
+            className={`hidden w-auto md:block ${compact ? "h-9" : "h-14"}`}
           />
         </div>
       </div>
