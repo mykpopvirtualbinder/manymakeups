@@ -5,7 +5,7 @@ import { captureHold, createHold, paymentMode, readHold, refundHold, releaseHold
 import { isExemptProvince } from "./places";
 import { baseFromGross, quoteOrder } from "./quote";
 import { freshId, getOrder, listOrders, mutateShop, nextNumber, saveCustomer } from "./store";
-import type { Customer, Order, OrderStatus } from "./types";
+import type { Customer, LineStock, Order, OrderStatus } from "./types";
 import { addressIssue, clip, dniIssue, normalizeDni } from "./validate";
 import { site } from "@/lib/site";
 
@@ -118,6 +118,7 @@ export async function placeOrder(customer: Customer, input: CheckoutInput, origi
     unitGrossCents: line.unitGrossCents,
     unitChargeCents: Math.max(0, Math.round(charges[index] / line.qty)),
     lineChargeCents: charges[index],
+    stock: "pending" as const,
   }));
 
   const pendingHolds: string[] = [];
@@ -238,15 +239,61 @@ async function markCancelled(id: string, origin: string | undefined, notify: boo
   return order;
 }
 
-async function markConfirmed(id: string, origin: string | undefined, notify: boolean) {
+function lineStock(stock: LineStock | undefined): LineStock {
+  return stock === "yes" || stock === "no" ? stock : "pending";
+}
+
+export function confirmedCharge(order: Order) {
+  const kept = order.lines.filter((line) => lineStock(line.stock) === "yes");
+  const pending = order.lines.some((line) => lineStock(line.stock) === "pending");
+  const goodsGrossCents = kept.reduce((sum, line) => sum + line.unitGrossCents * line.qty, 0);
+  const quote = kept.length ? quoteOrder(goodsGrossCents, order.exempt) : null;
+  const captureCents = quote ? Math.min(quote.totalCents, order.totalCents) : 0;
+  return { kept, pending, quote, captureCents };
+}
+
+export async function setLineStock(id: string, index: number, stock: Exclude<LineStock, "pending">) {
+  const order = await getOrder(id);
+  if (!order || order.status !== "authorized") {
+    throw new ShopError("Este pedido ya no se puede modificar.");
+  }
+  if (!order.lines[index]) throw new ShopError("Ese artículo no está en el pedido.");
+  const saved = await patchOrder(id, (current) => {
+    if (current.status !== "authorized") return;
+    const line = current.lines[index];
+    if (!line) return;
+    line.stock = stock;
+  });
+  if (!saved) throw new ShopError("No he podido anotar el stock.");
+  return saved;
+}
+
+async function markConfirmed(
+  id: string,
+  origin: string | undefined,
+  notify: boolean,
+  settlement?: {
+    goodsGrossCents: number;
+    goodsChargeCents: number;
+    shippingGrossCents: number;
+    shippingChargeCents: number;
+    ivaCents: number;
+    totalCents: number;
+  },
+) {
   let changed = false;
-  const order = await patchOrder(id, (current, db) => {
-    if (current.status !== "authorized" && current.status !== "pending_payment") return;
-    if ((current.exempt || current.wantsInvoice) && !current.invoiceNumber) {
-      db.invoiceSeq += 1;
-      current.invoiceNumber = nextNumber(db.invoiceSeq, "F");
-      current.invoiceIssuedAt = stamp();
+  const order = await patchOrder(id, (current) => {
+    const open = current.status === "authorized" || current.status === "pending_payment";
+    if (!open && current.status !== "confirmed") return;
+    if (settlement) {
+      current.goodsGrossCents = settlement.goodsGrossCents;
+      current.goodsChargeCents = settlement.goodsChargeCents;
+      current.shippingGrossCents = settlement.shippingGrossCents;
+      current.shippingChargeCents = settlement.shippingChargeCents;
+      current.ivaCents = settlement.ivaCents;
+      current.totalCents = settlement.totalCents;
     }
+    if (!open) return;
     current.status = "confirmed";
     current.confirmedAt = stamp();
     changed = true;
@@ -260,14 +307,36 @@ export async function confirmOrder(id: string, origin: string) {
   if (!order || order.status !== "authorized") {
     throw new ShopError("Este pedido no está pendiente de confirmar.");
   }
+  const charge = confirmedCharge(order);
+  if (charge.pending) throw new ShopError("Marca cada artículo: hay stock o no hay.");
+  if (!charge.quote || charge.captureCents < 1) {
+    throw new ShopError("Ningún artículo tiene stock. Anula la reserva para no cobrar.");
+  }
   if (order.paymentMode === "stripe") {
     try {
-      await captureHold(order.stripePaymentIntentId);
+      await captureHold(
+        order.stripePaymentIntentId,
+        charge.captureCents < order.totalCents ? charge.captureCents : undefined,
+      );
     } catch {
       throw new ShopError("El banco no ha dejado cobrar la reserva. Si han pasado unos 7 días, la retención caduca y hay que repetir el pedido.");
     }
   }
-  const confirmed = await markConfirmed(id, origin, true);
+  const confirmed = await markConfirmed(
+    id,
+    origin,
+    true,
+    charge.quote.totalCents <= order.totalCents
+      ? {
+          goodsGrossCents: charge.quote.goodsGrossCents,
+          goodsChargeCents: charge.quote.goodsChargeCents,
+          shippingGrossCents: charge.quote.shippingGrossCents,
+          shippingChargeCents: charge.quote.shippingChargeCents,
+          ivaCents: charge.quote.ivaCents,
+          totalCents: charge.quote.totalCents,
+        }
+      : undefined,
+  );
   if (!confirmed || confirmed.status !== "confirmed") throw new ShopError("No he podido confirmar el pedido.");
   return confirmed;
 }
@@ -320,13 +389,8 @@ export async function refundOrder(id: string, origin: string) {
     }
   }
   let changed = false;
-  const order = await patchOrder(id, (current, db) => {
+  const order = await patchOrder(id, (current) => {
     if (current.status !== "confirmed" && current.status !== "shipped") return;
-    if (current.invoiceNumber && !current.creditNumber) {
-      db.invoiceSeq += 1;
-      current.creditNumber = nextNumber(db.invoiceSeq, "R");
-      current.creditIssuedAt = stamp();
-    }
     current.status = "refunded";
     current.refundedAt = stamp();
     changed = true;

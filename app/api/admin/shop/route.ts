@@ -1,6 +1,6 @@
 import { go } from "@/lib/portal/http";
 import { requireShopStaff } from "@/lib/shop/access";
-import { ShopError, confirmOrder, refundOrder, releaseOrder, shipOrder } from "@/lib/shop/orders";
+import { ShopError, confirmOrder, refundOrder, releaseOrder, setLineStock, shipOrder } from "@/lib/shop/orders";
 
 export async function POST(request: Request) {
   const admin = await requireShopStaff();
@@ -12,7 +12,12 @@ export async function POST(request: Request) {
   const back = `/privado/tienda/${id}`;
   try {
     if (action === "confirm") await confirmOrder(id, origin);
-    else if (action === "release") await releaseOrder(id, origin);
+    else if (action === "stock") {
+      const stock = String(form.get("stock") || "");
+      const index = Number(form.get("index"));
+      if (stock !== "yes" && stock !== "no") return go(request, `${back}?error=${encodeURIComponent("Indica si hay stock.")}`);
+      await setLineStock(id, index, stock);
+    } else if (action === "release") await releaseOrder(id, origin);
     else if (action === "ship") await shipOrder(id, String(form.get("tracking") || ""), String(form.get("carrier") || ""), origin);
     else if (action === "refund") await refundOrder(id, origin);
     else return go(request, `${back}?error=${encodeURIComponent("Acción no reconocida.")}`);

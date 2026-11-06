@@ -14,10 +14,7 @@ export async function StudioAside({ extra }: { extra?: ReactNode }) {
   return (
     <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
       <Link className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/tienda">
-        Pedidos
-      </Link>
-      <Link className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/tienda/clientes">
-        Clientes
+        Tienda
       </Link>
       <Link className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/novias">
         Clientas

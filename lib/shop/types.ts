@@ -19,6 +19,8 @@ export type Customer = ShopAddress & {
 
 export type PublicCustomer = Omit<Customer, "passwordHash">;
 
+export type LineStock = "pending" | "yes" | "no";
+
 export type OrderLine = {
   productId: string;
   name: string;
@@ -27,6 +29,7 @@ export type OrderLine = {
   unitGrossCents: number;
   unitChargeCents: number;
   lineChargeCents: number;
+  stock?: LineStock;
 };
 
 export type OrderStatus =

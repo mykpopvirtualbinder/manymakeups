@@ -29,7 +29,7 @@ export default async function StudioShopPage() {
       studio
       wide
       kicker="Tienda"
-      title="Pedidos de extensiones."
+      title="Tienda."
       lead="No hay consulta automática de stock. Cuando entre un pedido reservado, míralo en La Casa del Pelo y solo entonces cobra. La retención de la tarjeta dura unos 7 días."
       aside={<StudioAside />}
     >
@@ -46,15 +46,15 @@ export default async function StudioShopPage() {
         <ul className="mt-6 divide-y divide-ink/10 border-y border-ink/10">
           {orders.map((order) => (
             <li key={order.id}>
-              <a className="flex flex-col gap-1 py-4 hover:text-gilt sm:flex-row sm:items-center sm:justify-between" href={`/privado/tienda/${order.id}`}>
-                <span>
+              <a className="flex items-center justify-between gap-4 py-4 hover:text-gilt" href={`/privado/tienda/${order.id}`}>
+                <span className="min-w-0 truncate text-sm text-ash">
                   <span className="font-serif text-2xl text-ink">{order.number}</span>
-                  <span className="mt-1 block text-sm text-ash">
+                  <span className="ml-3">
                     {order.firstName} {order.lastName} · {statusLabel(order.status)}
                     {order.exempt ? " · sin IVA" : ""}
                   </span>
                 </span>
-                <span className="font-serif text-2xl text-ink">{formatMoney(order.totalCents)}</span>
+                <span className="shrink-0 font-serif text-2xl text-ink">{formatMoney(order.totalCents)}</span>
               </a>
             </li>
           ))}

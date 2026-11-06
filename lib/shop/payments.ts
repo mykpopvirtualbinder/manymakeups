@@ -32,10 +32,13 @@ export async function createHold(input: { amount: number; email: string; orderId
   });
 }
 
-export async function captureHold(paymentIntentId: string) {
+export async function captureHold(paymentIntentId: string, amountToCapture?: number) {
   const stripe = stripeClient();
   try {
-    return await stripe.paymentIntents.capture(paymentIntentId);
+    return await stripe.paymentIntents.capture(
+      paymentIntentId,
+      amountToCapture && amountToCapture > 0 ? { amount_to_capture: amountToCapture } : undefined,
+    );
   } catch {
     const current = await stripe.paymentIntents.retrieve(paymentIntentId);
     if (current.status === "succeeded") return current;

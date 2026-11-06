@@ -56,7 +56,10 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           <li key={`${line.productId}-${line.color}`} className="flex justify-between gap-6 py-4">
             <span>
               {line.qty} × {line.name}
-              <span className="mt-1 block text-sm text-ash">Color {line.color}</span>
+              <span className="mt-1 block text-sm text-ash">
+                Color {line.color}
+                {line.stock === "no" ? " · sin stock, no se cobra" : ""}
+              </span>
             </span>
             <span>{formatMoney(line.lineChargeCents)}</span>
           </li>

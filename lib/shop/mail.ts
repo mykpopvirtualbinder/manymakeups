@@ -3,7 +3,12 @@ import { formatMoney } from "./quote";
 import type { Order } from "./types";
 
 function lines(order: Order) {
-  return order.lines.map((line) => `- ${line.qty} x ${line.name}, color ${line.color}`).join("\n");
+  return order.lines
+    .map((line) => {
+      const missing = line.stock === "no" ? " (sin stock, no se cobra)" : "";
+      return `- ${line.qty} x ${line.name}, color ${line.color}${missing}`;
+    })
+    .join("\n");
 }
 
 export async function sendShopMail(to: string, subject: string, text: string) {

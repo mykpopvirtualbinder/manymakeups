@@ -1,7 +1,7 @@
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioAside } from "@/app/components/portal/StudioAside";
 import { getProduct, supplierSearchUrl } from "@/lib/shop/catalog";
-import { statusLabel } from "@/lib/shop/orders";
+import { confirmedCharge, statusLabel } from "@/lib/shop/orders";
 import { EXEMPT_INVOICE_NOTE, formatMoney } from "@/lib/shop/quote";
 import { getOrder } from "@/lib/shop/store";
 import { ShopAdminNav } from "@/app/components/shop/ShopAdminNav";
@@ -30,6 +30,8 @@ export default async function StudioOrderPage({
   const order = await getOrder(id);
   if (!order) notFound();
   const carrier = order.carrier || "Correos";
+  const charge = confirmedCharge(order);
+  const open = order.status === "authorized";
 
   return (
     <PortalFrame
@@ -45,38 +47,102 @@ export default async function StudioOrderPage({
         <ShopAdminNav current="pedidos" />
         {query.error ? <PortalNotice>{query.error}</PortalNotice> : null}
         {query.ok ? <PortalNotice>Pedido actualizado.</PortalNotice> : null}
-        <p className="text-sm leading-relaxed text-ash">
-          {order.address.street}, {order.address.extra}. {order.address.postalCode} {order.address.city}, {order.address.province}.
-          {order.dni ? ` DNI ${order.dni}.` : ""}
-        </p>
+        <div className="grid max-w-3xl gap-6 sm:grid-cols-2">
+          <section>
+            <p className="text-[0.68rem] uppercase tracking-[0.18em] text-ash">Envío</p>
+            <p className="mt-2 text-sm leading-relaxed text-ink">
+              {order.firstName} {order.lastName}
+              <br />
+              {order.phone}
+              <br />
+              {order.email}
+              <br />
+              {order.address.street}
+              {order.address.extra ? (
+                <>
+                  <br />
+                  {order.address.extra}
+                </>
+              ) : null}
+              <br />
+              {order.address.postalCode} {order.address.city}
+              <br />
+              {order.address.province}
+            </p>
+          </section>
+          <section>
+            <p className="text-[0.68rem] uppercase tracking-[0.18em] text-ash">Facturación</p>
+            <p className="mt-2 text-sm leading-relaxed text-ink">
+              {order.exempt ? "Factura obligatoria por aduana." : order.wantsInvoice ? "Ha pedido factura." : "No ha pedido factura."}
+              {order.dni ? ` DNI ${order.dni}.` : " Sin DNI."}
+              <br />
+              La factura se emite en Eventae. Este pedido no genera número.
+            </p>
+          </section>
+        </div>
         {order.exempt ? <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink">{EXEMPT_INVOICE_NOTE}</p> : null}
         {order.paymentMode === "local" ? (
           <p className="mt-4 text-sm text-ash">Reserva local, sin tarjeta. Confirmar no cobra de verdad.</p>
         ) : null}
         <ul className="mt-6 max-w-3xl divide-y divide-ink/10 border-y border-ink/10">
-          {order.lines.map((line) => {
+          {order.lines.map((line, index) => {
             const product = getProduct(line.productId);
+            const stock = line.stock === "yes" || line.stock === "no" ? line.stock : "pending";
             return (
-              <li key={`${line.productId}-${line.color}`} className="flex flex-col gap-2 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p>
-                    {line.qty} × {line.name}. Color {line.color}.
-                  </p>
-                  {product ? (
-                    <a className="text-sm text-gilt underline" href={supplierSearchUrl(product, line.color)} target="_blank" rel="noreferrer">
-                      Buscar en La Casa del Pelo
-                    </a>
-                  ) : null}
+              <li key={`${line.productId}-${line.color}`} className="flex flex-col gap-3 py-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p>
+                      {line.qty} × {line.name}. Color {line.color}.
+                    </p>
+                    {product ? (
+                      <a className="text-sm text-gilt underline" href={supplierSearchUrl(product, line.color)} target="_blank" rel="noreferrer">
+                        Buscar en La Casa del Pelo
+                      </a>
+                    ) : null}
+                  </div>
+                  <p>{formatMoney(line.lineChargeCents)}</p>
                 </div>
-                <p>{formatMoney(line.lineChargeCents)}</p>
+                {open ? (
+                  <form action="/api/admin/shop" method="post" className="flex flex-wrap gap-2">
+                    <input type="hidden" name="orderId" value={order.id} />
+                    <input type="hidden" name="action" value="stock" />
+                    <input type="hidden" name="index" value={String(index)} />
+                    <button
+                      className={stock === "yes" ? "btn-atelier-solid btn-atelier" : "btn-atelier"}
+                      name="stock"
+                      value="yes"
+                      type="submit"
+                    >
+                      Hay stock
+                    </button>
+                    <button
+                      className={stock === "no" ? "border border-ink bg-ink px-4 py-2 text-[0.68rem] uppercase tracking-[0.16em] text-porcelain" : "btn-atelier"}
+                      name="stock"
+                      value="no"
+                      type="submit"
+                    >
+                      Sin stock
+                    </button>
+                  </form>
+                ) : (
+                  <p className="text-sm text-ash">{stock === "no" ? "Sin stock. No se cobra." : stock === "yes" ? "Con stock." : ""}</p>
+                )}
               </li>
             );
           })}
         </ul>
         <p className="mt-4 font-serif text-3xl">
-          {formatMoney(order.totalCents)}
+          {open ? "Reserva" : order.status === "cancelled" ? "Anulado" : "Cobrado"} {formatMoney(order.totalCents)}
           {order.shippingChargeCents ? ` · envío ${formatMoney(order.shippingChargeCents)}` : " · envío gratis"}
         </p>
+        {open && !charge.pending && charge.quote ? (
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-ash">
+            Se cobrarán {formatMoney(charge.captureCents)}
+            {charge.quote.shippingChargeCents ? `, envío incluido ${formatMoney(charge.quote.shippingChargeCents)}` : ", envío gratis"}.
+            {charge.kept.length < order.lines.length ? " El resto de la reserva se libera." : ""}
+          </p>
+        ) : null}
         <div className="mt-8 flex max-w-xl flex-col gap-6">
           {order.status === "authorized" ? (
             <>
@@ -84,14 +150,14 @@ export default async function StudioOrderPage({
                 <input type="hidden" name="orderId" value={order.id} />
                 <input type="hidden" name="action" value="confirm" />
                 <button className="btn-atelier-solid btn-atelier" type="submit">
-                  Hay stock: cobrar
+                  Cobrar lo confirmado
                 </button>
               </form>
               <form action="/api/admin/shop" method="post">
                 <input type="hidden" name="orderId" value={order.id} />
                 <input type="hidden" name="action" value="release" />
                 <button className="btn-atelier" type="submit">
-                  No hay stock: liberar la reserva
+                  Anular la reserva
                 </button>
               </form>
             </>
