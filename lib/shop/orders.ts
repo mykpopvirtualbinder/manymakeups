@@ -254,12 +254,12 @@ export function confirmedCharge(order: Order) {
 
 export async function setLineStock(id: string, index: number, stock: Exclude<LineStock, "pending">) {
   const order = await getOrder(id);
-  if (!order || order.status !== "authorized") {
+  if (!order || (order.status !== "authorized" && order.status !== "pending_payment")) {
     throw new ShopError("Este pedido ya no se puede modificar.");
   }
   if (!order.lines[index]) throw new ShopError("Ese artículo no está en el pedido.");
   const saved = await patchOrder(id, (current) => {
-    if (current.status !== "authorized") return;
+    if (current.status !== "authorized" && current.status !== "pending_payment") return;
     const line = current.lines[index];
     if (!line) return;
     line.stock = stock;
@@ -304,13 +304,16 @@ async function markConfirmed(
 
 export async function confirmOrder(id: string, origin: string) {
   const order = await getOrder(id);
-  if (!order || order.status !== "authorized") {
+  if (!order || (order.status !== "authorized" && order.status !== "pending_payment")) {
     throw new ShopError("Este pedido no está pendiente de confirmar.");
   }
+  if (order.status === "pending_payment") {
+    throw new ShopError("La clienta todavía no ha reservado la tarjeta. Cuando termine el pago, podrás finalizar y cobrar.");
+  }
   const charge = confirmedCharge(order);
-  if (charge.pending) throw new ShopError("Marca cada artículo: hay stock o no hay.");
+  if (charge.pending) throw new ShopError("Confirma o anula cada artículo antes de finalizar.");
   if (!charge.quote || charge.captureCents < 1) {
-    throw new ShopError("Ningún artículo tiene stock. Anula la reserva para no cobrar.");
+    throw new ShopError("Ningún artículo está confirmado. Anula el pedido para no cobrar.");
   }
   if (order.paymentMode === "stripe") {
     try {

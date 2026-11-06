@@ -31,7 +31,7 @@ export default async function StudioOrderPage({
   if (!order) notFound();
   const carrier = order.carrier || "Correos";
   const charge = confirmedCharge(order);
-  const open = order.status === "authorized";
+  const open = order.status === "authorized" || order.status === "pending_payment";
 
   return (
     <PortalFrame
@@ -114,15 +114,15 @@ export default async function StudioOrderPage({
                       value="yes"
                       type="submit"
                     >
-                      Hay stock
+                      Confirmar
                     </button>
                     <button
-                      className={stock === "no" ? "border border-ink bg-ink px-4 py-2 text-[0.68rem] uppercase tracking-[0.16em] text-porcelain" : "btn-atelier"}
+                      className={stock === "no" ? "btn-atelier-solid btn-atelier" : "btn-atelier"}
                       name="stock"
                       value="no"
                       type="submit"
                     >
-                      Sin stock
+                      Anular
                     </button>
                   </form>
                 ) : (
@@ -144,24 +144,6 @@ export default async function StudioOrderPage({
           </p>
         ) : null}
         <div className="mt-8 flex max-w-xl flex-col gap-6">
-          {order.status === "authorized" ? (
-            <>
-              <form action="/api/admin/shop" method="post">
-                <input type="hidden" name="orderId" value={order.id} />
-                <input type="hidden" name="action" value="confirm" />
-                <button className="btn-atelier-solid btn-atelier" type="submit">
-                  Cobrar lo confirmado
-                </button>
-              </form>
-              <form action="/api/admin/shop" method="post">
-                <input type="hidden" name="orderId" value={order.id} />
-                <input type="hidden" name="action" value="release" />
-                <button className="btn-atelier" type="submit">
-                  Anular la reserva
-                </button>
-              </form>
-            </>
-          ) : null}
           {order.status === "confirmed" ? (
             <form action="/api/admin/shop" method="post" className="flex flex-col gap-4">
               <input type="hidden" name="orderId" value={order.id} />
@@ -210,6 +192,31 @@ export default async function StudioOrderPage({
           </div>
         </div>
       </div>
+      {open ? (
+        <div className="shrink-0 border-t border-ink/10 bg-porcelain py-4">
+          <div className="flex max-w-xl flex-col gap-3">
+            {order.status === "pending_payment" ? (
+              <p className="text-sm leading-relaxed text-ash">La clienta todavía no ha reservado la tarjeta. Puedes marcar los artículos; el cobro se hace cuando la reserva esté hecha.</p>
+            ) : (
+              <p className="text-sm leading-relaxed text-ash">Confirma o anula cada artículo. Al finalizar se cobra solo lo confirmado y se libera el resto.</p>
+            )}
+            <form action="/api/admin/shop" method="post">
+              <input type="hidden" name="orderId" value={order.id} />
+              <input type="hidden" name="action" value="confirm" />
+              <button className="btn-atelier-solid btn-atelier w-full" type="submit">
+                Finalizar pedido y cobrar
+              </button>
+            </form>
+            <form action="/api/admin/shop" method="post">
+              <input type="hidden" name="orderId" value={order.id} />
+              <input type="hidden" name="action" value="release" />
+              <button className="btn-atelier w-full" type="submit">
+                Anular el pedido
+              </button>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </PortalFrame>
   );
 }

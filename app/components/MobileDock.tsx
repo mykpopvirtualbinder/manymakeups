@@ -74,8 +74,8 @@ export function MobileDock({
     <>
       {open ? (
         <div className="md:hidden">
-          <button type="button" className="fixed inset-0 z-40 bg-ink/30" aria-label={closeLabel} onClick={() => setOpen(false)} />
-          <nav className="fixed inset-x-0 bottom-[calc(4.4rem+env(safe-area-inset-bottom))] z-50 border border-ink/10 bg-porcelain px-5 py-4">
+          <button type="button" className="fixed inset-0 z-[60] bg-ink/30" aria-label={closeLabel} onClick={() => setOpen(false)} />
+          <nav className="fixed inset-x-0 bottom-[calc(4.4rem+env(safe-area-inset-bottom))] z-[70] border border-ink/10 bg-porcelain px-5 py-4">
             <ul className="flex flex-col">
               {more.map((item) => (
                 <li key={item.href} className="border-b border-ink/10 last:border-b-0">
@@ -89,7 +89,7 @@ export function MobileDock({
         </div>
       ) : null}
       <nav
-        className="fixed inset-x-0 bottom-0 z-50 flex border-t border-ink/10 bg-porcelain/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+        className="fixed inset-x-0 bottom-0 z-[70] flex border-t border-ink/10 bg-porcelain/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
         aria-label={menuLabel}
       >
         {pinned.map((item) => (

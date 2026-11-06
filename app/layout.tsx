@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Outfit } from "next/font/google";
 import { IntroSplash } from "./components/IntroSplash";
+import { SiteDock } from "./components/SiteDock";
 import { JsonLd } from "./components/JsonLd";
 import { ScrollJump } from "./components/ScrollJump";
 import "./globals.css";
@@ -114,6 +115,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <JsonLd />
           {skipIntro ? null : <IntroSplash />}
           {children}
+          <SiteDock />
           <ScrollJump />
         </I18nProvider>
         <Analytics />

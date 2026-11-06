@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     else if (action === "stock") {
       const stock = String(form.get("stock") || "");
       const index = Number(form.get("index"));
-      if (stock !== "yes" && stock !== "no") return go(request, `${back}?error=${encodeURIComponent("Indica si hay stock.")}`);
+      if (stock !== "yes" && stock !== "no") return go(request, `${back}?error=${encodeURIComponent("Confirma o anula el artículo.")}`);
       await setLineStock(id, index, stock);
     } else if (action === "release") await releaseOrder(id, origin);
     else if (action === "ship") await shipOrder(id, String(form.get("tracking") || ""), String(form.get("carrier") || ""), origin);
