@@ -55,6 +55,36 @@ export async function SiteFooter({ compact = false }: { compact?: boolean }) {
             </a>
             <a
               className="underline-offset-4 hover:underline"
+              href={localePath(locale, "/condiciones-de-venta")}
+            >
+              {t.footer.terms}
+            </a>
+            <a
+              className="underline-offset-4 hover:underline"
+              href={localePath(locale, "/condiciones-de-compra")}
+            >
+              {t.footer.purchase}
+            </a>
+            <a
+              className="underline-offset-4 hover:underline"
+              href={localePath(locale, "/envios")}
+            >
+              {t.footer.shipping}
+            </a>
+            <a
+              className="underline-offset-4 hover:underline"
+              href={localePath(locale, "/devoluciones")}
+            >
+              {t.footer.returns}
+            </a>
+            <a
+              className="underline-offset-4 hover:underline"
+              href={localePath(locale, "/tienda")}
+            >
+              {t.footer.shop}
+            </a>
+            <a
+              className="underline-offset-4 hover:underline"
               href={localePath(locale, "/area-novia")}
             >
               {t.nav.brideArea}

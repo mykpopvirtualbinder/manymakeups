@@ -15,6 +15,7 @@ export async function SiteHeader() {
     { href: localePath(locale, "/#servicios"), label: t.nav.atelier },
     { href: localePath(locale, "/#metodo"), label: t.nav.metodo },
     { href: localePath(locale, "/#ana"), label: t.nav.about },
+    { href: localePath(locale, "/tienda"), label: t.nav.shop },
     { href: localePath(locale, "/area-novia"), label: t.nav.brideArea },
   ];
 
@@ -48,14 +49,16 @@ export async function SiteHeader() {
             ))}
           </nav>
           <LanguageSwitch current={locale} path={path} enabled />
-          <div className="hidden md:block">
-            <a
-              className="btn-atelier shrink-0"
-              href={localePath(locale, "/#contacto")}
-            >
-              {t.nav.contact}
-            </a>
-          </div>
+          <a
+            className="inline-flex size-10 items-center justify-center text-ink"
+            href={localePath(locale, "/#contacto")}
+            aria-label={t.nav.contact}
+          >
+            <svg viewBox="0 0 24 24" className="size-[1.15rem]" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="m3 7 9 7 9-7" />
+            </svg>
+          </a>
           <MobileNav
             label={t.nav.principal}
             closeLabel={t.common.close}

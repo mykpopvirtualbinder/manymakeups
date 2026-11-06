@@ -315,10 +315,19 @@ main p {
   transform: none;
 }
 
-.legal-copy h2 {
+.legal-copy h2,
+.legal-copy h3 {
   font-family: var(--font-serif);
-  font-size: 1.65rem;
   color: var(--ink);
+}
+
+.legal-copy h2 {
+  font-size: 1.65rem;
+}
+
+.legal-copy h3 {
+  margin-top: 1.5rem;
+  font-size: 1.25rem;
 }
 
 .legal-copy p,
@@ -331,6 +340,22 @@ main p {
   color: var(--ink);
   text-decoration: underline;
   text-underline-offset: 0.18em;
+}
+
+.shop-shell p {
+  text-align: start;
+  hyphens: manual;
+}
+
+@media (max-width: 767px) {
+  .shop-shell .field {
+    font-size: 16px;
+  }
+}
+
+.legal-copy ul {
+  list-style: disc;
+  padding-left: 1.2rem;
 }
 
 html.intro-active {

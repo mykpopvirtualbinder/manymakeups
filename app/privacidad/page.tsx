@@ -18,7 +18,7 @@ export default async function PrivacidadPage() {
     <LegalDoc
       kicker={t.legal.kicker}
       title={t.legal.privacyTitle}
-      updated="13 de octubre de 2026"
+      updated="6 de noviembre de 2026"
     >
       <section>
         <h2>1. Responsable</h2>
@@ -44,7 +44,11 @@ export default async function PrivacidadPage() {
           del evento, las fotos de inspiración y los documentos del encargo,
           para organizar tu fecha y que tengas contrato y presupuestos a
           mano. No elaboro perfiles comerciales ni te mando boletines salvo
-          que lo pidas de forma expresa.
+          que lo pidas de forma expresa. Si compras extensiones, trato además
+          el teléfono, la dirección completa de envío, el pedido y, cuando el
+          destino es Canarias, Ceuta o Melilla o pides factura, el DNI o NIE,
+          para preparar el envío, emitir la factura y, en esos territorios,
+          el documento de aduana.
         </p>
       </section>
       <section>
@@ -66,7 +70,9 @@ export default async function PrivacidadPage() {
           calendario de citas (Calendly), el alojamiento, el archivo de
           fotos y documentos del área de clientes y la analítica de visitas
           (Vercel) y, si eliges WhatsApp, Meta Platforms Ireland según las
-          condiciones de WhatsApp. Estos encargados o destinos pueden estar
+          condiciones de WhatsApp. Si compras en la tienda, el pago lo procesa
+          Stripe y no guardo el número de la tarjeta; Correos recibe el nombre, el teléfono y la
+          dirección para entregar el paquete. Estos encargados o destinos pueden estar
           fuera del Espacio Económico Europeo; en ese caso se aplican las
           salvaguardas que ofrezca cada proveedor (cláusulas tipo, etc.).
         </p>
@@ -76,7 +82,8 @@ export default async function PrivacidadPage() {
         <p>
           Conservo las consultas el tiempo necesario para resolverlas y, si
           hay encargo, el exigido por obligaciones contables, fiscales o de
-          reclamaciones. Los datos del área de clientes se conservan mientras
+          reclamaciones. Las facturas de la tienda se conservan durante el
+          plazo de las obligaciones fiscales. Los datos del área de clientes se conservan mientras
           dure el encargo y el plazo legal posterior. Después se suprimen o
           anonimizan.
         </p>

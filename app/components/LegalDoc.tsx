@@ -7,11 +7,13 @@ export async function LegalDoc({
   kicker,
   title,
   updated,
+  updatedLabel,
   children,
 }: {
   kicker: string;
   title: string;
   updated: string;
+  updatedLabel?: string;
   children: ReactNode;
 }) {
   const locale = await getLocale();
@@ -28,7 +30,7 @@ export async function LegalDoc({
           {title}
         </h1>
         <p className="mt-4 text-sm text-ash">
-          {t.common.legalUpdated}: {updated}
+          {updatedLabel ?? t.common.legalUpdated}: {updated}
         </p>
         {locale !== "es" ? (
           <p className="mt-6 text-sm leading-relaxed text-ash">

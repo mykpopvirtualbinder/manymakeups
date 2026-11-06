@@ -19,6 +19,7 @@ export type MailFile = {
   filename: string;
   contentType: string;
   size: number;
+  cid?: string;
 };
 
 export type MailSummary = {
@@ -238,6 +239,27 @@ export async function listMailbox(account: MailboxKey, folder: MailFolder) {
     .slice(0, 200);
 }
 
+function presentMessage(record: MailRecord): MailRecord {
+  if (!record.html.includes("cid:")) return record;
+  const hidden = new Set<string>();
+  let html = record.html;
+  for (const file of record.attachments) {
+    if (!file.contentType.startsWith("image/")) continue;
+    const stem = file.filename.replace(/\.[^.]+$/, "");
+    const cid = (file.cid || stem).replace(/^<|>$/g, "");
+    if (!cid || !html.includes(`cid:${cid}`)) continue;
+    const src = `/api/admin/mail?account=${encodeURIComponent(record.account)}&id=${encodeURIComponent(record.id)}&file=${encodeURIComponent(file.id)}`;
+    html = html.split(`cid:${cid}`).join(src);
+    hidden.add(file.id);
+  }
+  if (!hidden.size) return record;
+  return {
+    ...record,
+    html,
+    attachments: record.attachments.filter((file) => !hidden.has(file.id)),
+  };
+}
+
 export async function readMessage(id: string, options?: { seen?: boolean }) {
   const record = await readJson<MailRecord>(bodyKey(id));
   if (!record) return null;
@@ -252,7 +274,7 @@ export async function readMessage(id: string, options?: { seen?: boolean }) {
       rows.map((row) => (row.id === id ? { ...row, seen: true } : row)),
     );
   }
-  return record;
+  return presentMessage(record);
 }
 
 export async function readAttachment(messageId: string, fileId: string) {
@@ -374,6 +396,7 @@ export async function storeIncoming(raw: Buffer, envelopeTo: string) {
       id: newId(),
       filename: safeName(file.filename || "", file.contentType || "application/octet-stream", index),
       contentType: file.contentType || "application/octet-stream",
+      cid: (file.cid || "").replace(/^<|>$/g, "").slice(0, 200),
       bytes: file.content,
     }))
     .filter((file) => file.bytes?.length);
@@ -400,11 +423,12 @@ export async function storeIncoming(raw: Buffer, envelopeTo: string) {
     text,
     html: typeof mail.html === "string" ? sanitizeMailHtml(mail.html) : "",
     inReplyTo: (typeof mail.inReplyTo === "string" ? mail.inReplyTo : "").slice(0, 500),
-    attachments: kept.map(({ id, filename, contentType, bytes }) => ({
+    attachments: kept.map(({ id, filename, contentType, cid, bytes }) => ({
       id,
       filename,
       contentType,
       size: bytes.length,
+      ...(cid ? { cid } : {}),
     })),
   };
   await saveRecord(record, kept.map((file) => ({ id: file.id, bytes: file.bytes, contentType: file.contentType })));

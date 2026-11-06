@@ -18,7 +18,7 @@ export default async function AvisoLegalPage() {
     <LegalDoc
       kicker={t.legal.kicker}
       title={t.legal.noticeTitle}
-      updated="23 de septiembre de 2026"
+      updated="6 de noviembre de 2026"
     >
       <section>
         <h2>1. Titular</h2>
@@ -37,10 +37,18 @@ export default async function AvisoLegalPage() {
         <p>
           El Sitio informa sobre los servicios de estilismo, maquillaje,
           peinado, estética, formación y cuidado de la piel que ofrece el
-          Titular, y permite solicitar consulta, cita o reserva. El acceso es
-          gratuito. La contratación del servicio se concreta fuera del Sitio
-          (consulta, WhatsApp, teléfono o calendario), con las condiciones que
-          se acuerden en cada encargo.
+          Titular, y permite solicitar consulta, cita o reserva. También
+          ofrece la venta de extensiones de cabello, regida por las{" "}
+          <a href="/condiciones-de-venta">condiciones de venta</a>, la
+          información de <a href="/envios">envíos</a> y la de{" "}
+          <a href="/devoluciones">cambios y devoluciones</a>.
+        </p>
+        <p>
+          El acceso al Sitio es gratuito. La contratación del servicio de
+          estilismo se concreta fuera del Sitio (consulta, WhatsApp, teléfono
+          o calendario), con las condiciones que se acuerden en cada encargo.
+          La compra de extensiones se hace en la tienda: el importe se reserva
+          y solo se cobra cuando el Titular confirma que hay disponibilidad.
         </p>
       </section>
       <section>

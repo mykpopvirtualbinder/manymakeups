@@ -30,6 +30,11 @@ export type Messages = {
     about: string;
     contact: string;
     brideArea: string;
+    shop: string;
+    cart: string;
+    account: string;
+    backToSite: string;
+    backToShop: string;
     principal: string;
     language: string;
   };
@@ -114,6 +119,11 @@ export type Messages = {
     notice: string;
     privacy: string;
     cookies: string;
+    shop: string;
+    shipping: string;
+    returns: string;
+    terms: string;
+    purchase: string;
   };
   legal: {
     kicker: string;
@@ -154,6 +164,11 @@ export const es: Messages = {
     about: "Sobre mí",
     contact: "Contacto",
     brideArea: "Área clientes",
+    shop: "Tienda",
+    cart: "Cesta",
+    account: "Cuenta",
+    backToSite: "Volver a la web",
+    backToShop: "Volver a la tienda",
     principal: "Principal",
     language: "Idioma",
   },
@@ -306,6 +321,11 @@ export const es: Messages = {
     notice: "Aviso legal",
     privacy: "Privacidad",
     cookies: "Cookies",
+    shop: "Tienda",
+    shipping: "Envíos",
+    returns: "Cambios y devoluciones",
+    terms: "Condiciones de venta",
+    purchase: "Compra y envíos",
   },
   legal: {
     kicker: "Legal",
@@ -491,6 +511,11 @@ export const en: Messages = {
     about: "About",
     contact: "Contact",
     brideArea: "Client area",
+    shop: "Shop",
+    cart: "Bag",
+    account: "Account",
+    backToSite: "Back to the site",
+    backToShop: "Back to the shop",
     principal: "Main",
     language: "Language",
   },
@@ -643,6 +668,11 @@ export const en: Messages = {
     notice: "Legal notice",
     privacy: "Privacy",
     cookies: "Cookies",
+    shop: "Shop",
+    shipping: "Shipping",
+    returns: "Changes and returns",
+    terms: "Terms of sale",
+    purchase: "Purchase and shipping",
   },
   legal: {
     kicker: "Legal",
@@ -827,6 +857,11 @@ export const fr: Messages = {
     about: "À propos",
     contact: "Contact",
     brideArea: "Espace clientes",
+    shop: "Boutique",
+    cart: "Panier",
+    account: "Compte",
+    backToSite: "Retour au site",
+    backToShop: "Retour à la boutique",
     principal: "Principal",
     language: "Langue",
   },
@@ -979,6 +1014,11 @@ export const fr: Messages = {
     notice: "Mentions légales",
     privacy: "Confidentialité",
     cookies: "Cookies",
+    shop: "Boutique",
+    shipping: "Livraison",
+    returns: "Échanges et retours",
+    terms: "Conditions de vente",
+    purchase: "Achat et livraison",
   },
   legal: {
     kicker: "Mentions",

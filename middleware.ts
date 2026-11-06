@@ -8,19 +8,25 @@ function localeFromPath(pathname: string) {
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  const locale = localeFromPath(pathname);
+  const carried = request.headers.get("x-mm-locale");
+  const fromPath = localeFromPath(pathname);
+  const locale = carried === "en" || carried === "fr" || carried === "es" ? carried : fromPath;
+
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-mm-locale", locale);
+  requestHeaders.set("x-mm-path", request.headers.get("x-mm-path") || pathname);
 
   let response: NextResponse;
-  if (locale === "es") {
-    response = NextResponse.next();
+  if (fromPath === "es" || carried) {
+    response = NextResponse.next({ request: { headers: requestHeaders } });
   } else {
     const url = request.nextUrl.clone();
-    url.pathname = pathname.slice(`/${locale}`.length) || "/";
-    response = NextResponse.rewrite(url);
+    url.pathname = pathname.slice(`/${fromPath}`.length) || "/";
+    response = NextResponse.rewrite(url, { request: { headers: requestHeaders } });
   }
 
   response.cookies.set("NEXT_LOCALE", locale, { path: "/", sameSite: "lax" });
-  response.cookies.set("x-pathname", `${pathname}${request.nextUrl.search}`, {
+  response.cookies.set("x-pathname", `${requestHeaders.get("x-mm-path")}${request.nextUrl.search}`, {
     path: "/",
     sameSite: "lax",
   });

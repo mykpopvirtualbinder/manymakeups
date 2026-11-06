@@ -18,7 +18,7 @@ export default async function CookiesPage() {
     <LegalDoc
       kicker={t.legal.kicker}
       title={t.legal.cookiesTitle}
-      updated="13 de octubre de 2026"
+      updated="6 de noviembre de 2026"
     >
       <section>
         <h2>1. Qué uso</h2>
@@ -27,8 +27,10 @@ export default async function CookiesPage() {
           miden con Vercel Web Analytics, un recuento agregado que no usa
           cookies de seguimiento ni te identifica. También hay cookies
           técnicas de idioma para mostrar el Sitio en español, inglés o
-          francés, y una cookie de sesión si entras al área de clientes o al
-          estudio, para mantenerte identificada. La presentación inicial se
+          francés, una cookie de sesión si entras al área de clientes o al
+          estudio, y otra cookie de sesión si entras en la cuenta de la tienda,
+          para mantenerte identificada. La cesta de la compra se guarda en el
+          almacenamiento local del navegador, no en una cookie. La presentación inicial se
           recuerda solo durante la visita, en el almacenamiento de sesión
           del navegador, para no repetirla al cambiar de página.
         </p>
@@ -40,7 +42,8 @@ export default async function CookiesPage() {
           cookies propias en su iframe, según su política. Si envías el
           formulario, la petición viaja a FormSubmit. Si eliges WhatsApp,
           sales a un servicio de Meta. El alojamiento y la analítica de
-          visitas los presta Vercel. Esos tratamientos se rigen por las
+          visitas los presta Vercel. Si pagas en la tienda, Stripe puede
+          usar sus propias cookies en la ventana de pago. Esos tratamientos se rigen por las
           condiciones de cada proveedor. No controlo las cookies que ellos
           puedan colocar una vez cargas o abandonas el Sitio hacia sus
           dominios.
