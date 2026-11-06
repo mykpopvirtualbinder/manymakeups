@@ -13,13 +13,9 @@ export async function ShopHeader() {
   const t = getMessages(locale);
   const path = await getRequestPathname();
   const customer = await getShopCustomer();
-  const loggingIn = path === "/tienda/cuenta" && !customer;
-  const parts = path.split("/").filter(Boolean);
-  const onArticle = parts[0] === "tienda" && parts.length === 2 && !["cuenta", "carrito", "pedido"].includes(parts[1]);
-  const onCart = path === "/tienda/carrito";
-  const backToShop = loggingIn || onArticle || onCart;
-  const backHref = localePath(locale, backToShop ? "/tienda" : "/");
-  const backLabel = backToShop ? t.nav.backToShop : t.nav.backToSite;
+  const onShopHome = path === "/tienda";
+  const backHref = localePath(locale, onShopHome ? "/" : "/tienda");
+  const backLabel = onShopHome ? t.nav.backToSite : t.nav.backToShop;
   const shopAdmin = Boolean(await requireAdmin()) || Boolean(customer && isShopAdminEmail(customer.email));
 
   return (
@@ -33,7 +29,7 @@ export async function ShopHeader() {
         </a>
         <div className="flex items-center gap-1 sm:gap-2">
           <a
-            className="inline-flex shrink-0 items-center border border-ink px-3 py-2 text-[0.62rem] uppercase tracking-[0.14em] text-ink hover:bg-ink hover:text-porcelain"
+            className="inline-flex shrink-0 items-center whitespace-nowrap border border-ink px-2 py-2 text-[0.56rem] uppercase tracking-[0.08em] text-ink hover:bg-ink hover:text-porcelain sm:px-3 sm:text-[0.62rem] sm:tracking-[0.14em]"
             href={backHref}
           >
             {backLabel}
