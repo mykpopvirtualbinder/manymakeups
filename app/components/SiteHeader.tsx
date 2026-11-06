@@ -1,6 +1,5 @@
 import { BrandLogo } from "./BrandLogo";
 import { LanguageSwitch } from "./LanguageSwitch";
-import { MobileNav } from "./MobileNav";
 import { site } from "@/lib/site";
 import { getLocale, getMessages, localePath } from "@/lib/i18n";
 import { getRequestPathname } from "@/lib/i18n/server";
@@ -59,13 +58,6 @@ export async function SiteHeader() {
               <path d="m3 7 9 7 9-7" />
             </svg>
           </a>
-          <MobileNav
-            label={t.nav.principal}
-            closeLabel={t.common.close}
-            contactLabel={t.nav.contact}
-            contactHref={localePath(locale, "/#contacto")}
-            links={links}
-          />
         </div>
       </div>
     </header>

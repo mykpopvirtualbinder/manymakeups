@@ -74,7 +74,7 @@ export function ScrollJump() {
   }, []);
 
   return (
-    <div className="site-jump pointer-events-none fixed right-[max(1rem,env(safe-area-inset-right))] bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-30 flex flex-col items-end gap-2">
+    <div className="site-jump pointer-events-none fixed right-[max(1rem,env(safe-area-inset-right))] bottom-[calc(5.15rem+env(safe-area-inset-bottom))] z-[60] flex flex-col items-end gap-2 md:bottom-[max(1.25rem,env(safe-area-inset-bottom))] md:z-30">
       {showDown ? (
         <button
           type="button"

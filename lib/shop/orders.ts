@@ -245,11 +245,31 @@ function lineStock(stock: LineStock | undefined): LineStock {
 
 export function confirmedCharge(order: Order) {
   const kept = order.lines.filter((line) => lineStock(line.stock) === "yes");
+  const dropped = order.lines.filter((line) => lineStock(line.stock) === "no");
   const pending = order.lines.some((line) => lineStock(line.stock) === "pending");
-  const goodsGrossCents = kept.reduce((sum, line) => sum + line.unitGrossCents * line.qty, 0);
-  const quote = kept.length ? quoteOrder(goodsGrossCents, order.exempt) : null;
-  const captureCents = quote ? Math.min(quote.totalCents, order.totalCents) : 0;
-  return { kept, pending, quote, captureCents };
+  const droppedCents = dropped.reduce((sum, line) => sum + line.lineChargeCents, 0);
+  const droppedGross = dropped.reduce((sum, line) => sum + line.unitGrossCents * line.qty, 0);
+  const goodsGrossCents = Math.max(0, order.goodsGrossCents - droppedGross);
+  const goodsChargeCents = Math.max(0, order.goodsChargeCents - droppedCents);
+  const shippingGrossCents = order.shippingGrossCents;
+  const shippingChargeCents = order.shippingChargeCents;
+  const ivaCents = order.exempt
+    ? 0
+    : goodsGrossCents -
+      baseFromGross(goodsGrossCents) +
+      (shippingGrossCents - baseFromGross(shippingGrossCents));
+  const totalCents = goodsChargeCents + shippingChargeCents;
+  const quote = kept.length
+    ? {
+        goodsGrossCents,
+        goodsChargeCents,
+        shippingGrossCents,
+        shippingChargeCents,
+        ivaCents,
+        totalCents,
+      }
+    : null;
+  return { kept, pending, droppedCents, quote, captureCents: quote ? totalCents : 0 };
 }
 
 export async function setLineStock(id: string, index: number, stock: Exclude<LineStock, "pending">) {
