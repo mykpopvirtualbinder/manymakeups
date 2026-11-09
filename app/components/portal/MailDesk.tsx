@@ -67,6 +67,16 @@ function accountLabel(key: string) {
   return ACCOUNTS.find((item) => item.key === key)?.label || key;
 }
 
+function viewFromMark(mark: string): View {
+  if (mark === "global-inbox") return { id: "global-inbox" };
+  if (mark === "all-sent") return { id: "all-sent" };
+  if (mark === "all-junk") return { id: "all-junk" };
+  if (mark === "all-trash") return { id: "all-trash" };
+  if (mark.startsWith("all-inbox:")) return { id: "all-inbox", account: mark.slice("all-inbox:".length) as DeskKey };
+  const [, account, folder] = mark.split(":");
+  return { id: "box", account: account as DeskKey, folder: folder as MailFolder };
+}
+
 const MAX_FILES = 8;
 const MAX_BYTES = 20_000_000;
 const DIRECT_LIMIT = 3_200_000;
@@ -154,9 +164,6 @@ function Icon({ name }: { name: string }) {
   }
   if (name === "filter") {
     return <svg {...common}><path d="M4 6h16" /><path d="M7 12h10" /><path d="M10 18h4" /></svg>;
-  }
-  if (name === "folder") {
-    return <svg {...common}><path d="M3 7h6l2 2h10v9H3z" /></svg>;
   }
   return <svg {...common}><path d="M15 18H5V6h10" /><path d="m12 9 4 3-4 3" /></svg>;
 }
@@ -333,7 +340,6 @@ export function MailDesk() {
   const [phase, setPhase] = useState("");
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [foldersOpen, setFoldersOpen] = useState(false);
   const [readFilter, setReadFilter] = useState<"all" | "unread" | "read">("all");
   const fileRef = useRef<HTMLInputElement>(null);
   const openLink = useRef<() => void>(() => {});
@@ -757,54 +763,51 @@ export function MailDesk() {
 
       <section className="flex min-h-0 min-w-0 flex-1 flex-col md:grid md:grid-rows-[minmax(10rem,32%)_minmax(0,1fr)]">
         <div className={`${reading ? "hidden" : "flex"} min-h-0 min-w-0 flex-1 flex-col border-ink/10 bg-porcelain md:flex md:border-b`}>
-          <div className="flex items-center gap-1 overflow-x-auto border-b border-ink/10 px-2 py-2 md:hidden">
+          <div className="flex items-center gap-1 border-b border-ink/10 px-2 py-2 md:hidden">
             <Tool label="Mensaje nuevo" onClick={() => startCompose("new")}>
               <Icon name="compose" />
             </Tool>
-            <button
-              type="button"
-              onClick={() => openView({ id: "global-inbox" })}
-              className={`shrink-0 rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.12em] ${view.id === "global-inbox" ? "bg-ink text-porcelain" : "text-ink"}`}
-            >
-              Entrada{totalUnread ? ` ${totalUnread}` : ""}
-            </button>
-            {ACCOUNTS.map((item) => {
-              const active = view.id === "all-inbox" && view.account === item.key;
-              const count = counts[item.key] || 0;
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => openView({ id: "all-inbox", account: item.key })}
-                  className={`shrink-0 rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.12em] ${active ? "bg-ink text-porcelain" : "text-ash"}`}
-                >
-                  {item.label}{count ? ` ${count}` : ""}
-                </button>
-              );
-            })}
-            <Tool label="Carpetas" active={foldersOpen} onClick={() => setFoldersOpen((value) => !value)}>
-              <Icon name="folder" />
-            </Tool>
+            <label className="relative min-w-0 flex-1">
+              <span className="sr-only">Bandeja</span>
+              <select
+                aria-label="Bandeja"
+                className="w-full appearance-none truncate bg-transparent py-1 pr-6 text-sm text-ink outline-none"
+                value={viewMark(view)}
+                onChange={(event) => openView(viewFromMark(event.target.value))}
+              >
+                <optgroup label="Bandejas">
+                  <option value="global-inbox">Entrada{totalUnread ? ` (${totalUnread})` : ""}</option>
+                  {ACCOUNTS.map((item) => {
+                    const count = counts[item.key] || 0;
+                    return (
+                      <option key={item.key} value={`all-inbox:${item.key}`}>
+                        {item.label}{count ? ` (${count})` : ""}
+                      </option>
+                    );
+                  })}
+                </optgroup>
+                <optgroup label="Todas">
+                  <option value="all-sent">Enviados</option>
+                  <option value="all-junk">No deseados</option>
+                  <option value="all-trash">Papelera</option>
+                </optgroup>
+                {ACCOUNTS.map((item) => (
+                  <optgroup key={item.key} label={item.label}>
+                    {FOLDERS.map((entry) => (
+                      <option key={entry.id} value={`box:${item.key}:${entry.id}`}>
+                        {entry.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute inset-y-0 right-0 grid place-items-center text-ash" aria-hidden>
+                <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </span>
+            </label>
           </div>
-          {foldersOpen ? (
-            <div className="grid max-h-40 grid-cols-2 gap-1 overflow-y-auto border-b border-ink/10 px-2 py-2 md:hidden">
-              <button type="button" className="rounded-lg px-2 py-1 text-left text-sm" onClick={() => openView({ id: "all-sent" })}>Enviados</button>
-              <button type="button" className="rounded-lg px-2 py-1 text-left text-sm" onClick={() => openView({ id: "all-junk" })}>No deseados</button>
-              <button type="button" className="rounded-lg px-2 py-1 text-left text-sm" onClick={() => openView({ id: "all-trash" })}>Papelera</button>
-              {ACCOUNTS.map((item) =>
-                FOLDERS.map((entry) => (
-                  <button
-                    key={`${item.key}-${entry.id}`}
-                    type="button"
-                    className="truncate rounded-lg px-2 py-1 text-left text-sm"
-                    onClick={() => openView({ id: "box", account: item.key, folder: entry.id })}
-                  >
-                    {item.label} · {entry.label}
-                  </button>
-                )),
-              )}
-            </div>
-          ) : null}
           <div className="flex items-center gap-1 border-b border-ink/10 px-2 py-2">
             <Tool
               label={selecting ? "Dejar de seleccionar" : "Seleccionar"}
