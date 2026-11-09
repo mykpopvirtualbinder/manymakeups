@@ -1,6 +1,6 @@
 import { ClearCart } from "@/app/components/shop/ClearCart";
 import { ShopFrame } from "@/app/components/shop/ShopFrame";
-import { statusLabel, syncOrder } from "@/lib/shop/orders";
+import { confirmedCharge, statusLabel, syncOrder } from "@/lib/shop/orders";
 import { EXEMPT_CHECKOUT_NOTE, EXEMPT_INVOICE_NOTE, formatMoney } from "@/lib/shop/quote";
 import { getShopCustomer } from "@/lib/shop/session";
 import { getOrder } from "@/lib/shop/store";
@@ -29,6 +29,9 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   }
 
   const kept = order.status === "authorized" || order.status === "confirmed" || order.status === "shipped";
+  const charge = confirmedCharge(order);
+  const open = order.status === "authorized" || order.status === "pending_payment";
+  const payable = open && !charge.pending ? charge.captureCents : order.totalCents;
 
   return (
     <ShopFrame kicker="Pedido" title={order.number} lead={statusLabel(order.status)}>
@@ -55,17 +58,22 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         {order.lines.map((line) => (
           <li key={`${line.productId}-${line.color}`} className="flex justify-between gap-6 py-4">
             <span>
-              {line.qty} × {line.name}
+              <span className={line.stock === "no" ? "text-ash line-through" : undefined}>
+                {line.qty} × {line.name}
+              </span>
               <span className="mt-1 block text-sm text-ash">
                 Color {line.color}
                 {line.stock === "no" ? " · sin stock, no se cobra" : ""}
               </span>
             </span>
-            <span>{formatMoney(line.lineChargeCents)}</span>
+            <span className={line.stock === "no" ? "text-ash line-through" : undefined}>{formatMoney(line.lineChargeCents)}</span>
           </li>
         ))}
       </ul>
-      <p className="mt-6 font-serif text-3xl">{formatMoney(order.totalCents)}</p>
+      {open && charge.droppedCents > 0 && !charge.pending ? (
+        <p className="mt-6 text-sm text-ash">Reservado {formatMoney(order.totalCents)}. Se cobra {formatMoney(payable)}.</p>
+      ) : null}
+      <p className="mt-2 font-serif text-3xl">{formatMoney(payable)}</p>
       <p className="mt-4 text-sm text-ash">
         {order.address.street}, {order.address.extra}. {order.address.postalCode} {order.address.city}, {order.address.province}.
       </p>

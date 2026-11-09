@@ -92,7 +92,7 @@ export default async function StudioOrderPage({
               <li key={`${line.productId}-${line.color}`} className="flex flex-col gap-3 py-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p>
+                    <p className={stock === "no" ? "text-ash line-through" : undefined}>
                       {line.qty} × {line.name}. Color {line.color}.
                     </p>
                     {product ? (
@@ -114,7 +114,7 @@ export default async function StudioOrderPage({
                       value="yes"
                       type="submit"
                     >
-                      Confirmar
+                      {stock === "yes" ? "Confirmado" : "Confirmar"}
                     </button>
                     <button
                       className={stock === "no" ? "btn-atelier-solid btn-atelier" : "btn-atelier"}
@@ -122,27 +122,43 @@ export default async function StudioOrderPage({
                       value="no"
                       type="submit"
                     >
-                      Anular
+                      {stock === "no" ? "Rechazado" : "Rechazar"}
                     </button>
                   </form>
                 ) : (
-                  <p className="text-sm text-ash">{stock === "no" ? "Sin stock. No se cobra." : stock === "yes" ? "Con stock." : ""}</p>
+                  <p className="text-sm text-ash">{stock === "no" ? "Rechazado. No se cobra." : stock === "yes" ? "Confirmado. Se cobra." : ""}</p>
                 )}
               </li>
             );
           })}
         </ul>
-        <p className="mt-4 font-serif text-3xl">
-          {open ? "Total" : order.status === "cancelled" ? "Anulado" : "Cobrado"}{" "}
-          {formatMoney(open ? Math.max(0, order.totalCents - charge.droppedCents) : order.totalCents)}
-          {order.shippingChargeCents ? ` · envío ${formatMoney(order.shippingChargeCents)}` : " · envío gratis"}
-        </p>
-        {open && charge.droppedCents > 0 ? (
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-ash">
-            Anulado {formatMoney(charge.droppedCents)}. El total ya lo descuenta.
-            {charge.pending ? "" : ` Al finalizar se cobra ${formatMoney(charge.captureCents)}.`}
-          </p>
-        ) : null}
+        <div className="mt-4 max-w-xl">
+          {open ? (
+            <>
+              <p className="text-sm text-ash">
+                Autorizado {formatMoney(order.totalCents)}
+                {order.shippingChargeCents ? ` · envío ${formatMoney(order.shippingChargeCents)}` : " · envío gratis"}
+              </p>
+              <p className="mt-1 font-serif text-3xl">
+                A cobrar {charge.pending ? "—" : formatMoney(charge.captureCents)}
+              </p>
+              {charge.pending ? (
+                <p className="mt-2 text-sm leading-relaxed text-ash">Marca cada artículo. Confirmar entra en el cobro. Rechazar sale del total.</p>
+              ) : charge.droppedCents > 0 ? (
+                <p className="mt-2 text-sm leading-relaxed text-ash">
+                  Rechazado {formatMoney(charge.droppedCents)}. La tarjeta tenía {formatMoney(order.totalCents)} apartados y se cargan {formatMoney(charge.captureCents)}. El resto se libera.
+                </p>
+              ) : (
+                <p className="mt-2 text-sm leading-relaxed text-ash">Todo confirmado. Se cobra el importe autorizado.</p>
+              )}
+            </>
+          ) : (
+            <p className="font-serif text-3xl">
+              {order.status === "cancelled" ? "Anulado" : "Cobrado"} {formatMoney(order.totalCents)}
+              {order.shippingChargeCents ? ` · envío ${formatMoney(order.shippingChargeCents)}` : " · envío gratis"}
+            </p>
+          )}
+        </div>
         <div className="mt-8 flex max-w-xl flex-col gap-6">
           {order.status === "confirmed" ? (
             <form action="/api/admin/shop" method="post" className="flex flex-col gap-4">
@@ -198,13 +214,17 @@ export default async function StudioOrderPage({
             {order.status === "pending_payment" ? (
               <p className="text-sm leading-relaxed text-ash">La clienta todavía no ha reservado la tarjeta. Puedes marcar los artículos; el cobro se hace cuando la reserva esté hecha.</p>
             ) : (
-              <p className="text-sm leading-relaxed text-ash">Confirma o anula cada artículo. Al finalizar se cobra solo lo confirmado y se libera el resto.</p>
+              <p className="text-sm leading-relaxed text-ash">
+                {charge.pending
+                  ? "Cuando cada artículo esté confirmado o rechazado, el botón cobra solo la suma de los confirmados."
+                  : `Al finalizar se cargan ${formatMoney(charge.captureCents)} y se libera el resto de la reserva.`}
+              </p>
             )}
             <form action="/api/admin/shop" method="post">
               <input type="hidden" name="orderId" value={order.id} />
               <input type="hidden" name="action" value="confirm" />
               <button className="btn-atelier-solid btn-atelier w-full" type="submit">
-                Finalizar pedido y cobrar
+                {charge.pending ? "Finalizar pedido y cobrar" : `Cobrar ${formatMoney(charge.captureCents)}`}
               </button>
             </form>
             <form action="/api/admin/shop" method="post">
