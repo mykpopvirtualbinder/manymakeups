@@ -1,6 +1,5 @@
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioAside } from "@/app/components/portal/StudioAside";
-import { getProduct, supplierSearchUrl } from "@/lib/shop/catalog";
 import { confirmedCharge, statusLabel } from "@/lib/shop/orders";
 import { EXEMPT_INVOICE_NOTE, formatMoney } from "@/lib/shop/quote";
 import { getOrder } from "@/lib/shop/store";
@@ -86,20 +85,14 @@ export default async function StudioOrderPage({
         ) : null}
         <ul className="mt-6 max-w-3xl divide-y divide-ink/10 border-y border-ink/10">
           {order.lines.map((line, index) => {
-            const product = getProduct(line.productId);
             const stock = line.stock === "yes" || line.stock === "no" ? line.stock : "pending";
             return (
-              <li key={`${line.productId}-${line.color}`} className="flex flex-col gap-3 py-4">
+              <li key={`${line.productId}-${line.color}-${index}`} className="flex flex-col gap-3 py-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className={stock === "no" ? "text-ash line-through" : undefined}>
                       {line.qty} × {line.name}. Color {line.color}.
                     </p>
-                    {product ? (
-                      <a className="text-sm text-gilt underline" href={supplierSearchUrl(product, line.color)} target="_blank" rel="noreferrer">
-                        Buscar en La Casa del Pelo
-                      </a>
-                    ) : null}
                   </div>
                   <p className={stock === "no" ? "text-ash line-through" : undefined}>{formatMoney(line.lineChargeCents)}</p>
                 </div>
