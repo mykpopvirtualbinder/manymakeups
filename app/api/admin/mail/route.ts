@@ -15,7 +15,8 @@ import {
 } from "@/lib/portal/mail-store";
 import { binderAct, binderMailError, binderUnseen, listBinder, readBinder, readBinderFile } from "@/lib/portal/binder-mail";
 import { hotmailAct, hotmailMailError, hotmailUnseen, listHotmail, readHotmail, readHotmailFile, sendHotmail } from "@/lib/portal/microsoft-mail";
-import { MAILBOXES, mailboxByKey, type MailFolder } from "@/lib/portal/mailboxes";
+import { MAILBOXES, mailboxByKey, type MailFolder, type MailboxKey } from "@/lib/portal/mailboxes";
+import { PREVIEW_MAIL_ID, mailPreviewEnabled, previewMessage, previewSummary } from "@/lib/portal/mail-preview";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -38,9 +39,15 @@ export async function GET(req: Request) {
   if (!admin) return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   const url = new URL(req.url);
   if (url.searchParams.get("unseen") === "1") {
-    const snapshot = await unseenSnapshot();
-    const counts = { ...snapshot.counts, binder: 0, hotmail: 0 };
-    const items: Array<{ id: string; account: string; from: string; subject: string }> = [...snapshot.items];
+    const counts = { info: 0, accounting: 0, formaciones: 0, comercial: 0, management: 0, binder: 0, hotmail: 0 } as Record<MailboxKey | "binder" | "hotmail", number>;
+    const items: Array<{ id: string; account: string; from: string; subject: string }> = [];
+    try {
+      const snapshot = await unseenSnapshot();
+      Object.assign(counts, snapshot.counts);
+      items.push(...snapshot.items);
+    } catch {
+      /* The local preview still opens when the store is closed. */
+    }
     try {
       const extra = await binderUnseen();
       counts.binder = extra.count;
@@ -54,6 +61,10 @@ export async function GET(req: Request) {
       items.push(...extra.items);
     } catch {
       /* Hotmail stays quiet until it is connected */
+    }
+    if (mailPreviewEnabled()) {
+      counts.info += 1;
+      items.unshift({ id: PREVIEW_MAIL_ID, account: "info", from: previewSummary().from, subject: previewSummary().subject });
     }
     return NextResponse.json({ counts, items });
   }
@@ -130,6 +141,7 @@ export async function GET(req: Request) {
         /* atelier mail still opens if Hotmail is quiet */
       }
       messages.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+      if (mailPreviewEnabled() && folder === "inbox") messages.unshift(previewSummary());
       return NextResponse.json({ messages: messages.slice(0, 300) });
     } catch (err) {
       const pub = publicMailError(err);
@@ -141,6 +153,10 @@ export async function GET(req: Request) {
 
   const fileId = url.searchParams.get("file") || "";
   const messageId = url.searchParams.get("id") || "";
+  if (mailPreviewEnabled() && messageId === PREVIEW_MAIL_ID) {
+    return NextResponse.json({ message: previewMessage() });
+  }
+
   try {
     if (fileId && messageId) {
       const owner = await readMessage(messageId, { seen: false });
@@ -166,7 +182,16 @@ export async function GET(req: Request) {
       }
       return NextResponse.json({ message });
     }
-    const messages = await listMailbox(box.key, parseFolder(url.searchParams.get("folder")) || "inbox");
+    const folder = parseFolder(url.searchParams.get("folder")) || "inbox";
+    let messages: Awaited<ReturnType<typeof listMailbox>> = [];
+    try {
+      messages = await listMailbox(box.key, folder);
+    } catch (err) {
+      if (!(mailPreviewEnabled() && box.key === "info" && folder === "inbox")) throw err;
+    }
+    if (mailPreviewEnabled() && box.key === "info" && folder === "inbox") {
+      messages = [previewSummary(), ...messages.filter((row) => row.id !== PREVIEW_MAIL_ID)];
+    }
     return NextResponse.json({ messages });
   } catch (err) {
     const pub = publicMailError(err);
