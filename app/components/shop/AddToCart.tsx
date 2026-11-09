@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/context";
 import type { Locale } from "@/lib/i18n/config";
 import { colorSample, hairColors } from "@/lib/shop/colors";
@@ -40,7 +39,6 @@ export function AddToCart({
   color: string;
   onColor: (code: string) => void;
 }) {
-  const router = useRouter();
   const { locale } = useI18n();
   const labels = copy[locale];
   const [qty, setQty] = useState(1);
@@ -58,7 +56,7 @@ export function AddToCart({
           return;
         }
         addToCart({ productId, color, qty });
-        router.push("/tienda/carrito");
+        window.dispatchEvent(new Event("mm-cart-open"));
       }}
     >
       <p className="text-[0.68rem] uppercase tracking-[0.18em] text-ash">{labels.color}</p>

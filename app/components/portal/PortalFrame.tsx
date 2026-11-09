@@ -1,6 +1,7 @@
 import { BrandLogo } from "../BrandLogo";
 import { LanguageSwitch } from "@/app/components/LanguageSwitch";
 import { PortalMenu } from "@/app/components/portal/PortalMenu";
+import { StudioInbox } from "@/app/components/portal/StudioAside";
 import { getLocale, getPortalCopy, getRequestPathname, localePath } from "@/lib/i18n";
 import { site } from "@/lib/site";
 import type { ReactNode } from "react";
@@ -53,12 +54,15 @@ export async function PortalFrame({
               </div>
             ) : null}
             {studio && aside ? (
-              <PortalMenu label={copy.menu} closeLabel={copy.agendaClose}>
-                {aside}
-                <a className="flex min-h-11 w-full items-center border-b border-ink/10 text-sm uppercase tracking-[0.14em] text-ash hover:text-ink md:min-h-0 md:w-auto md:border-0 md:text-[0.68rem] md:tracking-[0.18em]" href={backHref}>
-                  {backLabel}
-                </a>
-              </PortalMenu>
+              <>
+                <PortalMenu label={copy.menu} closeLabel={copy.agendaClose}>
+                  {aside}
+                  <a className="flex min-h-11 w-full items-center border-b border-ink/10 text-sm uppercase tracking-[0.14em] text-ash hover:text-ink md:min-h-0 md:w-auto md:border-0 md:text-[0.68rem] md:tracking-[0.18em]" href={backHref}>
+                    {backLabel}
+                  </a>
+                </PortalMenu>
+                <StudioInbox />
+              </>
             ) : aside ? (
               <PortalMenu label={copy.menu} closeLabel={copy.agendaClose}>
                 {aside}

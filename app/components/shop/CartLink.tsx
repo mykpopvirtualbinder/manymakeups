@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 import type { Locale } from "@/lib/i18n/config";
 import { localePath } from "@/lib/i18n/path";
@@ -9,25 +9,37 @@ import { colorSample, getColor } from "@/lib/shop/colors";
 import { formatMoney, quoteOrder } from "@/lib/shop/quote";
 import { readCart, type CartLine } from "./cart-store";
 
-const copy: Record<Locale, { empty: string; continue: string; total: string; shipping: string; free: string }> = {
-  es: { empty: "La cesta está vacía.", continue: "Continuar", total: "Total", shipping: "Envío", free: "Envío gratis" },
-  en: { empty: "Your basket is empty.", continue: "Continue", total: "Total", shipping: "Delivery", free: "Free delivery" },
-  fr: { empty: "Le panier est vide.", continue: "Continuer", total: "Total", shipping: "Livraison", free: "Livraison offerte" },
+const copy: Record<Locale, { empty: string; continue: string; keep: string; total: string; shipping: string; free: string; close: string }> = {
+  es: { empty: "La cesta está vacía.", continue: "Continuar", keep: "Seguir comprando", total: "Total", shipping: "Envío", free: "Envío gratis", close: "Cerrar la cesta" },
+  en: { empty: "Your basket is empty.", continue: "Continue", keep: "Continue shopping", total: "Total", shipping: "Delivery", free: "Free delivery", close: "Close basket" },
+  fr: { empty: "Le panier est vide.", continue: "Continuer", keep: "Continuer les achats", total: "Total", shipping: "Livraison", free: "Livraison offerte", close: "Fermer le panier" },
 };
+
+function finePointer() {
+  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
 
 export function CartLink({ label }: { label: string }) {
   const { locale } = useI18n();
   const labels = copy[locale];
   const [lines, setLines] = useState<CartLine[]>([]);
   const [open, setOpen] = useState(false);
+  const pinned = useRef(false);
 
   useEffect(() => {
     const sync = () => setLines(readCart());
+    const reveal = () => {
+      pinned.current = true;
+      sync();
+      setOpen(true);
+    };
     sync();
     window.addEventListener("mm-cart", sync);
+    window.addEventListener("mm-cart-open", reveal);
     window.addEventListener("storage", sync);
     return () => {
       window.removeEventListener("mm-cart", sync);
+      window.removeEventListener("mm-cart-open", reveal);
       window.removeEventListener("storage", sync);
     };
   }, []);
@@ -43,13 +55,37 @@ export function CartLink({ label }: { label: string }) {
   const quote = quoteOrder(goods, false);
   const cartHref = localePath(locale, "/tienda/carrito");
   const checkoutHref = localePath(locale, "/tienda/pedido");
+  const shopHref = localePath(locale, "/tienda");
+
+  function close() {
+    pinned.current = false;
+    setOpen(false);
+  }
 
   return (
-    <div className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+    <div
+      className="relative"
+      onMouseEnter={() => {
+        if (finePointer()) setOpen(true);
+      }}
+      onMouseLeave={() => {
+        if (finePointer() && !pinned.current) setOpen(false);
+      }}
+    >
+      {open && pinned.current ? (
+        <button type="button" className="fixed inset-0 z-40 cursor-default" aria-label={labels.close} onClick={close} />
+      ) : null}
       <a
-        className="relative inline-flex size-10 items-center justify-center text-ink"
+        className="relative z-50 inline-flex size-10 items-center justify-center text-ink"
         href={cartHref}
         aria-label={count > 0 ? `${label}, ${count}` : label}
+        aria-expanded={open}
+        onClick={(event) => {
+          if (finePointer()) return;
+          event.preventDefault();
+          pinned.current = true;
+          setOpen((value) => !value);
+        }}
       >
         <svg viewBox="0 0 24 24" className="size-[1.15rem]" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
           <path d="M6.5 8h11l-1 12h-9l-1-12z" />
@@ -94,6 +130,9 @@ export function CartLink({ label }: { label: string }) {
                 </div>
                 <a className="btn-atelier-solid btn-atelier mt-4 w-full" href={checkoutHref}>
                   {labels.continue}
+                </a>
+                <a className="mt-3 block text-center text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink" href={shopHref}>
+                  {labels.keep}
                 </a>
               </>
             )}
