@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/i18n/config";
+import { formatMoney } from "@/lib/shop/quote";
 
 export type ProductKind = "uniforme" | "californianas";
 
@@ -106,6 +107,21 @@ export function productSummary(item: Product, locale: Locale = "es") {
 
 export function productName(item: Product, locale: Locale = "es") {
   return `${productTitle(item, locale)}, ${productSummary(item, locale)}`;
+}
+
+export function productSeoTitle(item: Product, locale: Locale = "es") {
+  const clip = locale === "en" ? "Clip-in extensions" : locale === "fr" ? "Extensions à clips" : "Extensiones de clip";
+  return `${clip}, ${productTitle(item, locale)}, ${item.lengthCm} cm, ${item.grams} g`;
+}
+
+export function productSeoDescription(item: Product, locale: Locale = "es") {
+  const hair =
+    locale === "en"
+      ? "100% natural REMY hair. Delivered throughout Spain."
+      : locale === "fr"
+        ? "Cheveux 100 % naturels, système REMY. Livraison dans toute l’Espagne."
+        : "Cabello 100 % natural, sistema REMY. Envío a toda España.";
+  return `${productSeoTitle(item, locale)}. ${hair} ${formatMoney(item.priceCents)}.`;
 }
 
 export function supplierSearchUrl(item: Product, color: string) {

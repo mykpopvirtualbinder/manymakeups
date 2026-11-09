@@ -56,6 +56,9 @@ export async function generateMetadata(): Promise<Metadata> {
       "Many Makeups",
       "automaquillaje Castellón",
       "formación maquillaje profesional Castellón",
+      "extensiones de clip",
+      "extensiones de cabello natural",
+      "extensiones remy",
     ],
     openGraph: {
       type: "website",
