@@ -67,14 +67,22 @@ function accountLabel(key: string) {
   return ACCOUNTS.find((item) => item.key === key)?.label || key;
 }
 
-function viewFromMark(mark: string): View {
-  if (mark === "global-inbox") return { id: "global-inbox" };
-  if (mark === "all-sent") return { id: "all-sent" };
-  if (mark === "all-junk") return { id: "all-junk" };
-  if (mark === "all-trash") return { id: "all-trash" };
-  if (mark.startsWith("all-inbox:")) return { id: "all-inbox", account: mark.slice("all-inbox:".length) as DeskKey };
-  const [, account, folder] = mark.split(":");
-  return { id: "box", account: account as DeskKey, folder: folder as MailFolder };
+function trayTitle(next: View) {
+  if (next.id === "global-inbox") return "Entrada";
+  if (next.id === "all-sent") return "Enviados";
+  if (next.id === "all-junk") return "No deseados";
+  if (next.id === "all-trash") return "Papelera";
+  if (next.id === "all-inbox") return accountLabel(next.account);
+  const folder = FOLDERS.find((entry) => entry.id === next.folder)?.label || "";
+  return `${accountLabel(next.account)} · ${folder}`;
+}
+
+function TrayChoice({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className={`block w-full px-3 py-2 text-left text-sm ${active ? "bg-ink/10 font-semibold" : ""}`}>
+      {label}
+    </button>
+  );
 }
 
 const MAX_FILES = 8;
@@ -340,6 +348,7 @@ export function MailDesk() {
   const [phase, setPhase] = useState("");
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [traysOpen, setTraysOpen] = useState(false);
   const [readFilter, setReadFilter] = useState<"all" | "unread" | "read">("all");
   const fileRef = useRef<HTMLInputElement>(null);
   const openLink = useRef<() => void>(() => {});
@@ -431,6 +440,11 @@ export function MailDesk() {
       window.clearInterval(timer);
     };
   }, []);
+
+  function pickTray(next: View) {
+    setTraysOpen(false);
+    openView(next);
+  }
 
   function openView(next: View) {
     if (viewMark(next) === viewMark(view)) return;
@@ -652,6 +666,11 @@ export function MailDesk() {
   const reading = Boolean(selected || compose);
   const mixed = place.account === "all";
   const totalUnread = ACCOUNTS.reduce((sum, item) => sum + (counts[item.key] || 0), 0);
+  const trayCount = view.id === "global-inbox"
+    ? totalUnread
+    : view.id === "all-inbox" || (view.id === "box" && view.folder === "inbox")
+      ? counts[view.account] || 0
+      : 0;
   const markAsRead = messages.some((item) => picked.includes(item.id) && !item.seen);
   const needle = query.trim().toLowerCase();
   const shown = messages.filter((item) => {
@@ -763,50 +782,56 @@ export function MailDesk() {
 
       <section className="flex min-h-0 min-w-0 flex-1 flex-col md:grid md:grid-rows-[minmax(10rem,32%)_minmax(0,1fr)]">
         <div className={`${reading ? "hidden" : "flex"} min-h-0 min-w-0 flex-1 flex-col border-ink/10 bg-porcelain md:flex md:border-b`}>
-          <div className="flex items-center gap-1 border-b border-ink/10 px-2 py-2 md:hidden">
+          <div className="relative flex items-center gap-1 border-b border-ink/10 px-2 py-2 md:hidden">
             <Tool label="Mensaje nuevo" onClick={() => startCompose("new")}>
               <Icon name="compose" />
             </Tool>
-            <label className="relative min-w-0 flex-1">
-              <span className="sr-only">Bandeja</span>
-              <select
-                aria-label="Bandeja"
-                className="w-full appearance-none truncate bg-transparent py-1 pr-6 text-sm text-ink outline-none"
-                value={viewMark(view)}
-                onChange={(event) => openView(viewFromMark(event.target.value))}
-              >
-                <optgroup label="Bandejas">
-                  <option value="global-inbox">Entrada{totalUnread ? ` (${totalUnread})` : ""}</option>
-                  {ACCOUNTS.map((item) => {
-                    const count = counts[item.key] || 0;
-                    return (
-                      <option key={item.key} value={`all-inbox:${item.key}`}>
-                        {item.label}{count ? ` (${count})` : ""}
-                      </option>
-                    );
-                  })}
-                </optgroup>
-                <optgroup label="Todas">
-                  <option value="all-sent">Enviados</option>
-                  <option value="all-junk">No deseados</option>
-                  <option value="all-trash">Papelera</option>
-                </optgroup>
+            <button
+              type="button"
+              aria-expanded={traysOpen}
+              aria-label="Bandeja"
+              className="flex h-9 min-w-0 flex-1 items-center justify-between gap-2 rounded-full border border-ink/15 px-3 text-left text-sm text-ink"
+              onClick={() => setTraysOpen((value) => !value)}
+            >
+              <span className="truncate">{trayTitle(view)}{trayCount ? ` (${trayCount})` : ""}</span>
+              <svg viewBox="0 0 24 24" className={`size-[18px] shrink-0 text-ash ${traysOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+            {traysOpen ? (
+              <div className="absolute inset-x-2 top-full z-30 max-h-72 overflow-y-auto border border-ink/10 bg-porcelain py-1 shadow-sm">
+                <p className="px-3 py-1 text-[0.68rem] uppercase tracking-[0.14em] text-ash">Bandejas</p>
+                <TrayChoice label={`Entrada${totalUnread ? ` (${totalUnread})` : ""}`} active={view.id === "global-inbox"} onClick={() => pickTray({ id: "global-inbox" })} />
+                {ACCOUNTS.map((item) => {
+                  const count = counts[item.key] || 0;
+                  return (
+                    <TrayChoice
+                      key={item.key}
+                      label={`${item.label}${count ? ` (${count})` : ""}`}
+                      active={view.id === "all-inbox" && view.account === item.key}
+                      onClick={() => pickTray({ id: "all-inbox", account: item.key })}
+                    />
+                  );
+                })}
+                <p className="mt-1 px-3 py-1 text-[0.68rem] uppercase tracking-[0.14em] text-ash">Todas</p>
+                <TrayChoice label="Enviados" active={view.id === "all-sent"} onClick={() => pickTray({ id: "all-sent" })} />
+                <TrayChoice label="No deseados" active={view.id === "all-junk"} onClick={() => pickTray({ id: "all-junk" })} />
+                <TrayChoice label="Papelera" active={view.id === "all-trash"} onClick={() => pickTray({ id: "all-trash" })} />
                 {ACCOUNTS.map((item) => (
-                  <optgroup key={item.key} label={item.label}>
+                  <div key={item.key}>
+                    <p className="mt-1 px-3 py-1 text-[0.68rem] uppercase tracking-[0.14em] text-ash">{item.label}</p>
                     {FOLDERS.map((entry) => (
-                      <option key={entry.id} value={`box:${item.key}:${entry.id}`}>
-                        {entry.label}
-                      </option>
+                      <TrayChoice
+                        key={entry.id}
+                        label={entry.label}
+                        active={view.id === "box" && view.account === item.key && view.folder === entry.id}
+                        onClick={() => pickTray({ id: "box", account: item.key, folder: entry.id })}
+                      />
                     ))}
-                  </optgroup>
+                  </div>
                 ))}
-              </select>
-              <span className="pointer-events-none absolute inset-y-0 right-0 grid place-items-center text-ash" aria-hidden>
-                <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.6">
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </span>
-            </label>
+              </div>
+            ) : null}
           </div>
           <div className="flex items-center gap-1 border-b border-ink/10 px-2 py-2">
             <Tool
