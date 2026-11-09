@@ -33,15 +33,12 @@ export default async function StudioCustomerPage({ params }: { params: Promise<{
       aside={<StudioAside />}
     >
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
+        <a className="mb-2 inline-flex size-11 items-center justify-center text-ink" href="/privado/tienda/clientes" aria-label="Volver a clientes">
+          <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+            <path d="M15 5 8 12l7 7" />
+          </svg>
+        </a>
         <ShopAdminNav current="clientes" />
-        <div className="mb-8 flex flex-wrap gap-3">
-          <a className="btn-atelier" href="/privado/tienda/clientes">
-            Volver a clientes
-          </a>
-          <a className="btn-atelier" href="/privado/tienda">
-            Volver a pedidos
-          </a>
-        </div>
         <section>
           <p className="text-[0.68rem] uppercase tracking-[0.18em] text-ash">Datos</p>
           {vip ? <p className="mt-2 text-[0.68rem] uppercase tracking-[0.18em] text-gilt">VIP · Admin</p> : null}

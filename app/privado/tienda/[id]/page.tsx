@@ -42,15 +42,12 @@ export default async function StudioOrderPage({
       aside={<StudioAside />}
     >
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
+        <a className="mb-2 inline-flex size-11 items-center justify-center text-ink" href="/privado/tienda" aria-label="Volver a pedidos">
+          <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+            <path d="M15 5 8 12l7 7" />
+          </svg>
+        </a>
         <ShopAdminNav current="pedidos" />
-        <div className="mb-8 flex flex-wrap gap-3">
-          <a className="btn-atelier" href="/privado/tienda">
-            Volver a pedidos
-          </a>
-          <a className="btn-atelier" href="/privado/tienda/clientes">
-            Volver a clientes
-          </a>
-        </div>
         {query.error ? <PortalNotice>{query.error}</PortalNotice> : null}
         {query.ok ? <PortalNotice>Pedido actualizado.</PortalNotice> : null}
         <div className="grid max-w-3xl gap-6 sm:grid-cols-2">
