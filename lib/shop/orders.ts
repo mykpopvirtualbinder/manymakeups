@@ -1,7 +1,7 @@
 import { getProduct, productName } from "./catalog";
 import { getColor } from "./colors";
 import { mailOrder } from "./mail";
-import { captureHold, createHold, paymentMode, readHold, refundHold, releaseHold } from "./payments";
+import { captureHold, createHold, createReserveCheckout, paymentMode, readHold, refundHold, releaseHold, stripeClient } from "./payments";
 import { isExemptProvince } from "./places";
 import { baseFromGross, quoteOrder } from "./quote";
 import { freshId, getOrder, listOrders, mutateShop, nextNumber, saveCustomer } from "./store";
@@ -176,6 +176,7 @@ export async function placeOrder(customer: Customer, input: CheckoutInput, origi
     shippedAt: "",
     cancelledAt: "",
     refundedAt: "",
+    archivedAt: "",
   };
 
   await mutateShop((db) => {
@@ -240,16 +241,38 @@ async function markCancelled(id: string, origin: string | undefined, notify: boo
 }
 
 function lineStock(stock: LineStock | undefined): LineStock {
-  return stock === "yes" || stock === "no" ? stock : "pending";
+  if (stock === "yes" || stock === "no" || stock === "reserved") return stock;
+  return "pending";
 }
 
 export function confirmedCharge(order: Order) {
   const kept = order.lines.filter((line) => lineStock(line.stock) === "yes");
+  const dropped = order.lines.filter((line) => lineStock(line.stock) === "no");
+  const reserved = order.lines.filter((line) => lineStock(line.stock) === "reserved");
   const pending = order.lines.some((line) => lineStock(line.stock) === "pending");
+  const droppedCents = dropped.reduce((sum, line) => sum + line.lineChargeCents, 0);
+  const reservedCents = reserved.reduce((sum, line) => sum + line.lineChargeCents, 0);
   const goodsGrossCents = kept.reduce((sum, line) => sum + line.unitGrossCents * line.qty, 0);
-  const quote = kept.length ? quoteOrder(goodsGrossCents, order.exempt) : null;
-  const captureCents = quote ? Math.min(quote.totalCents, order.totalCents) : 0;
-  return { kept, pending, quote, captureCents };
+  const goodsChargeCents = kept.reduce((sum, line) => sum + line.lineChargeCents, 0);
+  const shippingGrossCents = kept.length ? order.shippingGrossCents : 0;
+  const shippingChargeCents = kept.length ? order.shippingChargeCents : 0;
+  const ivaCents = order.exempt
+    ? 0
+    : goodsGrossCents -
+      baseFromGross(goodsGrossCents) +
+      (shippingGrossCents - baseFromGross(shippingGrossCents));
+  const totalCents = goodsChargeCents + shippingChargeCents;
+  const quote = kept.length
+    ? {
+        goodsGrossCents,
+        goodsChargeCents,
+        shippingGrossCents,
+        shippingChargeCents,
+        ivaCents,
+        totalCents,
+      }
+    : null;
+  return { kept, reserved, pending, droppedCents, reservedCents, quote, captureCents: quote ? totalCents : 0 };
 }
 
 export async function setLineStock(id: string, index: number, stock: Exclude<LineStock, "pending">) {
@@ -311,10 +334,28 @@ export async function confirmOrder(id: string, origin: string) {
     throw new ShopError("La clienta todavía no ha reservado la tarjeta. Cuando termine el pago, podrás finalizar y cobrar.");
   }
   const charge = confirmedCharge(order);
-  if (charge.pending) throw new ShopError("Confirma o anula cada artículo antes de finalizar.");
-  if (!charge.quote || charge.captureCents < 1) {
-    throw new ShopError("Ningún artículo está confirmado. Anula el pedido para no cobrar.");
+  if (charge.pending) throw new ShopError("Confirma, reserva o anula cada artículo antes de finalizar.");
+  if (charge.captureCents < 1) {
+    if (charge.reservedCents < 1) throw new ShopError("Ningún artículo está confirmado. Anula el pedido para no cobrar.");
+    if (order.paymentMode === "stripe" && order.stripePaymentIntentId) {
+      try {
+        await releaseHold(order.stripePaymentIntentId);
+      } catch {
+        throw new ShopError("El banco no ha dejado anular la reserva.");
+      }
+    }
+    const parked = await markConfirmed(id, origin, true, {
+      goodsGrossCents: 0,
+      goodsChargeCents: 0,
+      shippingGrossCents: order.shippingGrossCents,
+      shippingChargeCents: order.shippingChargeCents,
+      ivaCents: 0,
+      totalCents: 0,
+    });
+    if (!parked || parked.status !== "confirmed") throw new ShopError("No he podido dejar el pedido reservado.");
+    return parked;
   }
+  if (!charge.quote) throw new ShopError("Ningún artículo está confirmado. Anula el pedido para no cobrar.");
   if (order.paymentMode === "stripe") {
     try {
       await captureHold(
@@ -342,6 +383,74 @@ export async function confirmOrder(id: string, origin: string) {
   );
   if (!confirmed || confirmed.status !== "confirmed") throw new ShopError("No he podido confirmar el pedido.");
   return confirmed;
+}
+
+function applyReservedPayment(order: Order, index: number, paymentIntentId = "") {
+  const item = order.lines[index];
+  if (!item || item.stock !== "reserved") return false;
+  const firstShipment = order.goodsChargeCents === 0 && order.totalCents === 0;
+  item.stock = "yes";
+  item.reservePayUrl = "";
+  if (paymentIntentId) item.reservePaymentIntentId = paymentIntentId;
+  const gross = item.unitGrossCents * item.qty;
+  order.goodsGrossCents += gross;
+  order.goodsChargeCents += item.lineChargeCents;
+  order.totalCents += item.lineChargeCents;
+  if (!order.exempt) order.ivaCents += gross - baseFromGross(gross);
+  if (firstShipment && order.shippingChargeCents > 0) {
+    order.totalCents += order.shippingChargeCents;
+    if (!order.exempt) order.ivaCents += order.shippingGrossCents - baseFromGross(order.shippingGrossCents);
+  }
+  return true;
+}
+
+export async function chargeReserved(id: string, index: number, origin: string) {
+  const order = await getOrder(id);
+  if (!order || (order.status !== "confirmed" && order.status !== "shipped")) {
+    throw new ShopError("Primero cobra lo confirmado. La reserva se cobra después.");
+  }
+  const line = order.lines[index];
+  if (!line || line.stock !== "reserved") throw new ShopError("Ese artículo no está reservado.");
+  if (order.paymentMode === "local") {
+    const saved = await patchOrder(id, (current) => {
+      applyReservedPayment(current, index);
+    });
+    if (!saved || saved.lines[index]?.stock !== "yes") throw new ShopError("No he podido anotar el cobro de la reserva.");
+    return { url: "" };
+  }
+  if (line.reservePayUrl) return { url: line.reservePayUrl };
+  let url = "";
+  try {
+    const shippingCents = order.goodsChargeCents === 0 && order.totalCents === 0 ? order.shippingChargeCents : 0;
+    url = await createReserveCheckout({
+      amount: line.lineChargeCents,
+      shippingCents,
+      email: order.email,
+      orderId: order.id,
+      lineIndex: index,
+      name: `${line.qty} × ${line.name}, color ${line.color}`,
+      successUrl: `${origin}/api/shop/reserva?order=${order.id}&line=${index}&session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${origin}/tienda/pedido/${order.id}`,
+    });
+  } catch {
+    throw new ShopError("No he podido preparar el cobro de la reserva.");
+  }
+  await patchOrder(id, (current) => {
+    const item = current.lines[index];
+    if (item && item.stock === "reserved") item.reservePayUrl = url;
+  });
+  return { url };
+}
+
+export async function settleReservedCheckout(orderId: string, index: number, sessionId: string) {
+  const session = await stripeClient().checkout.sessions.retrieve(sessionId);
+  if (session.payment_status !== "paid") return false;
+  if (session.metadata?.orderId !== orderId || session.metadata?.lineIndex !== String(index)) return false;
+  const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id || "";
+  const saved = await patchOrder(orderId, (current) => {
+    applyReservedPayment(current, index, paymentIntentId);
+  });
+  return Boolean(saved);
 }
 
 export async function releaseOrder(id: string, origin: string) {
@@ -375,8 +484,7 @@ export async function shipOrder(id: string, tracking: string, carrier: string, o
     changed = true;
   });
   if (!changed || !order) throw new ShopError("Solo se puede enviar un pedido ya cobrado.");
-  await mailOrder(order, "shipped", origin);
-  return order;
+  return mailOrder(order, "shipped", origin);
 }
 
 export async function refundOrder(id: string, origin: string) {
@@ -386,7 +494,11 @@ export async function refundOrder(id: string, origin: string) {
   }
   if (existing.paymentMode === "stripe" && existing.stripePaymentIntentId) {
     try {
-      await refundHold(existing.stripePaymentIntentId);
+      const hold = await readHold(existing.stripePaymentIntentId);
+      if (hold.status === "succeeded") await refundHold(existing.stripePaymentIntentId);
+      for (const line of existing.lines) {
+        if (line.reservePaymentIntentId) await refundHold(line.reservePaymentIntentId);
+      }
     } catch {
       throw new ShopError("El banco no ha dejado devolver el cobro.");
     }
@@ -401,6 +513,38 @@ export async function refundOrder(id: string, origin: string) {
   if (!changed || !order) throw new ShopError("No he podido reembolsar el pedido.");
   await mailOrder(order, "refunded", origin);
   return order;
+}
+
+export async function voidOrder(id: string, origin: string) {
+  const order = await getOrder(id);
+  if (!order) throw new ShopError("Ese pedido ya no está.");
+  if (order.status === "confirmed" || order.status === "shipped") return refundOrder(id, origin);
+  if (order.status === "authorized" || order.status === "pending_payment") return releaseOrder(id, origin);
+  throw new ShopError("Este pedido ya está anulado.");
+}
+
+export async function deleteOrder(id: string, origin: string) {
+  const order = await getOrder(id);
+  if (!order) throw new ShopError("Ese pedido ya no está.");
+  if (order.status === "confirmed" || order.status === "shipped") {
+    throw new ShopError("Anula el pedido antes de borrarlo, para devolver el dinero.");
+  }
+  if (order.status === "authorized" || order.status === "pending_payment") await releaseOrder(id, origin);
+  const removed = await mutateShop((db) => {
+    const index = db.orders.findIndex((item) => item.id === id);
+    if (index < 0) return false;
+    db.orders.splice(index, 1);
+    return true;
+  });
+  if (!removed) throw new ShopError("No he podido borrar el pedido.");
+}
+
+export async function setOrderArchived(id: string, archived: boolean) {
+  const saved = await patchOrder(id, (current) => {
+    current.archivedAt = archived ? stamp() : "";
+  });
+  if (!saved) throw new ShopError("No he podido archivar el pedido.");
+  return saved;
 }
 
 export async function applyStripeEvent(paymentIntentId: string, status: string) {

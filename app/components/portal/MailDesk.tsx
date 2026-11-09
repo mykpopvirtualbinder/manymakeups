@@ -28,6 +28,10 @@ type MailMessage = MailSummary & {
   attachments: MailFile[];
 };
 
+function mailPreviewHtml(html: string) {
+  return html.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "").replace(/<\/?(?:html|head|body)\b[^>]*>/gi, "");
+}
+
 type Counts = Record<DeskKey, number>;
 
 const FOLDERS: Array<{ id: MailFolder; label: string }> = [
@@ -65,6 +69,24 @@ function viewMark(next: View) {
 
 function accountLabel(key: string) {
   return ACCOUNTS.find((item) => item.key === key)?.label || key;
+}
+
+function trayTitle(next: View) {
+  if (next.id === "global-inbox") return "Entrada";
+  if (next.id === "all-sent") return "Enviados";
+  if (next.id === "all-junk") return "No deseados";
+  if (next.id === "all-trash") return "Papelera";
+  if (next.id === "all-inbox") return accountLabel(next.account);
+  const folder = FOLDERS.find((entry) => entry.id === next.folder)?.label || "";
+  return `${accountLabel(next.account)} · ${folder}`;
+}
+
+function TrayChoice({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className={`block w-full px-3 py-2 text-left text-sm ${active ? "bg-ink/10 font-semibold" : ""}`}>
+      {label}
+    </button>
+  );
 }
 
 const MAX_FILES = 8;
@@ -330,6 +352,7 @@ export function MailDesk() {
   const [phase, setPhase] = useState("");
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [traysOpen, setTraysOpen] = useState(false);
   const [readFilter, setReadFilter] = useState<"all" | "unread" | "read">("all");
   const fileRef = useRef<HTMLInputElement>(null);
   const openLink = useRef<() => void>(() => {});
@@ -421,6 +444,11 @@ export function MailDesk() {
       window.clearInterval(timer);
     };
   }, []);
+
+  function pickTray(next: View) {
+    setTraysOpen(false);
+    openView(next);
+  }
 
   function openView(next: View) {
     if (viewMark(next) === viewMark(view)) return;
@@ -642,6 +670,11 @@ export function MailDesk() {
   const reading = Boolean(selected || compose);
   const mixed = place.account === "all";
   const totalUnread = ACCOUNTS.reduce((sum, item) => sum + (counts[item.key] || 0), 0);
+  const trayCount = view.id === "global-inbox"
+    ? totalUnread
+    : view.id === "all-inbox" || (view.id === "box" && view.folder === "inbox")
+      ? counts[view.account] || 0
+      : 0;
   const markAsRead = messages.some((item) => picked.includes(item.id) && !item.seen);
   const needle = query.trim().toLowerCase();
   const shown = messages.filter((item) => {
@@ -653,8 +686,8 @@ export function MailDesk() {
   const allPicked = shown.length > 0 && shown.every((item) => picked.includes(item.id));
 
   return (
-    <div className="grid min-h-0 flex-1 overflow-hidden rounded-sm border border-ink/10 bg-porcelain md:grid-cols-[17rem_minmax(0,1fr)]">
-      <aside className={`${reading ? "hidden" : "flex"} min-h-0 flex-col overflow-y-auto border-ink/10 bg-porcelain md:flex md:border-r`}>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-sm border border-ink/10 bg-porcelain md:grid md:grid-cols-[17rem_minmax(0,1fr)]">
+      <aside className="hidden min-h-0 flex-col overflow-y-auto border-ink/10 bg-porcelain md:flex md:border-r">
         <div className="flex items-center gap-1 px-3 py-3">
           <Tool label="Mensaje nuevo" onClick={() => startCompose("new")}>
             <Icon name="compose" />
@@ -751,8 +784,59 @@ export function MailDesk() {
         </div>
       </aside>
 
-      <section className="grid min-h-0 min-w-0 md:grid-rows-[minmax(10rem,32%)_minmax(0,1fr)]">
-        <div className={`${reading ? "hidden" : "flex"} min-h-0 min-w-0 flex-col border-ink/10 bg-porcelain md:flex md:border-b`}>
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col md:grid md:grid-rows-[minmax(10rem,32%)_minmax(0,1fr)]">
+        <div className={`${reading ? "hidden" : "flex"} min-h-0 min-w-0 flex-1 flex-col border-ink/10 bg-porcelain md:flex md:border-b`}>
+          <div className="relative flex items-center gap-1 border-b border-ink/10 px-2 py-2 md:hidden">
+            <Tool label="Mensaje nuevo" onClick={() => startCompose("new")}>
+              <Icon name="compose" />
+            </Tool>
+            <button
+              type="button"
+              aria-expanded={traysOpen}
+              aria-label="Bandeja"
+              className="flex h-9 min-w-0 flex-1 items-center justify-between gap-2 rounded-full border border-ink/15 px-3 text-left text-sm text-ink"
+              onClick={() => setTraysOpen((value) => !value)}
+            >
+              <span className="truncate">{trayTitle(view)}{trayCount ? ` (${trayCount})` : ""}</span>
+              <svg viewBox="0 0 24 24" className={`size-[18px] shrink-0 text-ash ${traysOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+            {traysOpen ? (
+              <div className="absolute inset-x-2 top-full z-30 max-h-72 overflow-y-auto border border-ink/10 bg-porcelain py-1 shadow-sm">
+                <p className="px-3 py-1 text-[0.68rem] uppercase tracking-[0.14em] text-ash">Bandejas</p>
+                <TrayChoice label={`Entrada${totalUnread ? ` (${totalUnread})` : ""}`} active={view.id === "global-inbox"} onClick={() => pickTray({ id: "global-inbox" })} />
+                {ACCOUNTS.map((item) => {
+                  const count = counts[item.key] || 0;
+                  return (
+                    <TrayChoice
+                      key={item.key}
+                      label={`${item.label}${count ? ` (${count})` : ""}`}
+                      active={view.id === "all-inbox" && view.account === item.key}
+                      onClick={() => pickTray({ id: "all-inbox", account: item.key })}
+                    />
+                  );
+                })}
+                <p className="mt-1 px-3 py-1 text-[0.68rem] uppercase tracking-[0.14em] text-ash">Todas</p>
+                <TrayChoice label="Enviados" active={view.id === "all-sent"} onClick={() => pickTray({ id: "all-sent" })} />
+                <TrayChoice label="No deseados" active={view.id === "all-junk"} onClick={() => pickTray({ id: "all-junk" })} />
+                <TrayChoice label="Papelera" active={view.id === "all-trash"} onClick={() => pickTray({ id: "all-trash" })} />
+                {ACCOUNTS.map((item) => (
+                  <div key={item.key}>
+                    <p className="mt-1 px-3 py-1 text-[0.68rem] uppercase tracking-[0.14em] text-ash">{item.label}</p>
+                    {FOLDERS.map((entry) => (
+                      <TrayChoice
+                        key={entry.id}
+                        label={entry.label}
+                        active={view.id === "box" && view.account === item.key && view.folder === entry.id}
+                        onClick={() => pickTray({ id: "box", account: item.key, folder: entry.id })}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
           <div className="flex items-center gap-1 border-b border-ink/10 px-2 py-2">
             <Tool
               label={selecting ? "Dejar de seleccionar" : "Seleccionar"}
@@ -847,7 +931,7 @@ export function MailDesk() {
           </div>
         </div>
 
-        <div className={`${reading ? "flex" : "hidden"} min-h-0 min-w-0 flex-col bg-porcelain md:flex`}>
+        <div className={`${reading ? "flex" : "hidden"} min-h-0 min-w-0 flex-1 flex-col bg-porcelain md:flex`}>
           {compose ? (
             <form
               className="flex min-h-0 flex-1 flex-col"
@@ -943,7 +1027,7 @@ export function MailDesk() {
             </form>
           ) : selected ? (
             <article className="flex min-h-0 flex-1 flex-col">
-              <div className="flex flex-wrap items-center gap-1 border-b border-ink/10 px-2 py-2">
+              <div className="flex flex-nowrap items-center gap-1 overflow-x-auto border-b border-ink/10 px-2 py-2">
                 <span className="md:hidden">
                   <Tool label="Volver" onClick={() => setSelected(null)}>
                     <Icon name="back" />
@@ -976,12 +1060,12 @@ export function MailDesk() {
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-8">
                 <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-ink">{accountLabel(selected.account)}</p>
-                <h2 className="mt-2 font-serif text-2xl leading-tight md:text-3xl">{selected.subject || "(sin asunto)"}</h2>
+                <h2 className="mt-2 font-serif text-xl leading-tight md:text-3xl">{selected.subject || "(sin asunto)"}</h2>
                 <p className="mt-4 text-sm font-semibold">{displayName(place.folder === "sent" ? selected.to : selected.from)}</p>
                 <p className="text-sm text-ash">{place.folder === "sent" ? selected.to : selected.from}</p>
                 <p className="mt-1 text-[0.72rem] text-ash">Para {selected.to} · {formatWhen(selected.createdAt)}</p>
                 {selected.html ? (
-                  <div className="mt-6 text-sm leading-relaxed [&_img]:max-w-full [&_table]:max-w-full" dangerouslySetInnerHTML={{ __html: selected.html }} />
+                  <div className="mt-6 text-sm leading-relaxed [&_img]:max-w-full [&_table]:max-w-full" dangerouslySetInnerHTML={{ __html: mailPreviewHtml(selected.html) }} />
                 ) : (
                   <pre className="mt-6 whitespace-pre-wrap font-sans text-sm leading-relaxed">{selected.text || "(sin texto)"}</pre>
                 )}

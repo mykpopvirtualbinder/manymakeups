@@ -1,6 +1,5 @@
 import { BrandLogo } from "./BrandLogo";
 import { LanguageSwitch } from "./LanguageSwitch";
-import { MobileNav } from "./MobileNav";
 import { site } from "@/lib/site";
 import { getLocale, getMessages, localePath } from "@/lib/i18n";
 import { getRequestPathname } from "@/lib/i18n/server";
@@ -17,6 +16,7 @@ export async function SiteHeader() {
     { href: localePath(locale, "/#ana"), label: t.nav.about },
     { href: localePath(locale, "/tienda"), label: t.nav.shop },
     { href: localePath(locale, "/area-novia"), label: t.nav.brideArea },
+    { href: "/privado", label: t.nav.private },
   ];
 
   return (
@@ -50,6 +50,16 @@ export async function SiteHeader() {
           </nav>
           <LanguageSwitch current={locale} path={path} enabled />
           <a
+            className="inline-flex size-10 items-center justify-center text-ink md:hidden"
+            href="/privado"
+            aria-label={t.nav.private}
+          >
+            <svg viewBox="0 0 24 24" className="size-[1.15rem]" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+              <rect x="5" y="11" width="14" height="9" rx="1.5" />
+              <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+            </svg>
+          </a>
+          <a
             className="inline-flex size-10 items-center justify-center text-ink"
             href={localePath(locale, "/#contacto")}
             aria-label={t.nav.contact}
@@ -59,13 +69,6 @@ export async function SiteHeader() {
               <path d="m3 7 9 7 9-7" />
             </svg>
           </a>
-          <MobileNav
-            label={t.nav.principal}
-            closeLabel={t.common.close}
-            contactLabel={t.nav.contact}
-            contactHref={localePath(locale, "/#contacto")}
-            links={links}
-          />
         </div>
       </div>
     </header>

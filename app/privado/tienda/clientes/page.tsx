@@ -26,7 +26,6 @@ export default async function StudioCustomersPage() {
       wide
       kicker="Tienda"
       title="Clientes."
-      lead="Cuentas de la tienda de extensiones. info@manymakeups.com es la cuenta de administración."
       aside={<StudioAside />}
     >
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">

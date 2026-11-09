@@ -74,7 +74,7 @@ export function ScrollJump() {
   }, []);
 
   return (
-    <div className="site-jump pointer-events-none fixed right-[max(1rem,env(safe-area-inset-right))] bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-30 flex flex-col items-end gap-2">
+    <div className="site-jump pointer-events-none fixed right-[max(1rem,env(safe-area-inset-right))] bottom-[calc(5.15rem+env(safe-area-inset-bottom))] z-[60] flex flex-col items-end gap-2 md:hidden">
       {showDown ? (
         <button
           type="button"
@@ -90,7 +90,6 @@ export function ScrollJump() {
             window.scrollBy({ top: viewport().height * 0.9, behavior });
           }}
         >
-          <span className="hidden md:inline">{t.common.scrollDown}</span>
           <svg
             viewBox="0 0 24 24"
             className="size-4"
@@ -128,7 +127,6 @@ export function ScrollJump() {
           >
             <path d="M5 15l7-7 7 7" />
           </svg>
-          <span className="hidden md:inline">{t.common.scrollUp}</span>
         </button>
       ) : null}
     </div>

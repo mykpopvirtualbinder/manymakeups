@@ -64,3 +64,45 @@ export async function refundHold(paymentIntentId: string) {
 export async function readHold(paymentIntentId: string) {
   return stripeClient().paymentIntents.retrieve(paymentIntentId);
 }
+
+export async function createReserveCheckout(input: {
+  amount: number;
+  shippingCents: number;
+  email: string;
+  orderId: string;
+  lineIndex: number;
+  name: string;
+  successUrl: string;
+  cancelUrl: string;
+}) {
+  const lineItems = [
+    {
+      quantity: 1,
+      price_data: {
+        currency: "eur",
+        unit_amount: input.amount,
+        product_data: { name: input.name },
+      },
+    },
+  ];
+  if (input.shippingCents > 0) {
+    lineItems.push({
+      quantity: 1,
+      price_data: {
+        currency: "eur",
+        unit_amount: input.shippingCents,
+        product_data: { name: "Envío" },
+      },
+    });
+  }
+  const session = await stripeClient().checkout.sessions.create({
+    mode: "payment",
+    customer_email: input.email,
+    line_items: lineItems,
+    metadata: { orderId: input.orderId, lineIndex: String(input.lineIndex), kind: "reserve" },
+    success_url: input.successUrl,
+    cancel_url: input.cancelUrl,
+  });
+  if (!session.url) throw new Error("CHECKOUT_URL");
+  return session.url;
+}

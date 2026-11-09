@@ -89,6 +89,7 @@ export async function renderInvoice(order: Order, kind: "invoice" | "credit" = "
 
   const sign = kind === "credit" ? -1 : 1;
   for (const line of order.lines) {
+    if (line.stock === "no" || line.stock === "reserved") continue;
     text(`${line.qty} x ${line.name}`, { bold: true });
     text(`Color ${line.color}`, { color: ASH });
     text(money(sign * line.lineChargeCents), { gap: 6 });

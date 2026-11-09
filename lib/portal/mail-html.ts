@@ -5,6 +5,7 @@ const signatureUrl = `${site.url}/brand/mail/firma.png?v=4`;
 const signatureWidth = 168;
 
 const sans = "font-family:Skia,'Skia-Regular',Palatino,'Palatino Linotype',serif;";
+const serifFace = "Skia, Palatino, serif";
 
 const DETAIL_ICONS = {
   service: "icon-service.png",
@@ -17,7 +18,7 @@ const DETAIL_ICONS = {
 export type DetailIcon = keyof typeof DETAIL_ICONS;
 
 type MailBlock =
-  | { text: string; muted?: boolean; quote?: boolean; strong?: string }
+  | { text: string; muted?: boolean; quote?: boolean; strong?: string; link?: { href: string; label: string } }
   | { href: string; label: string }
   | { rows: { label: string; value: string }[] }
   | { details: { title: string; rows: { icon: DetailIcon; label: string; value: string }[] } };
@@ -29,6 +30,8 @@ export type ClientEmail = {
   footer?: { href: string; label: string };
   legalHtml?: string;
   legalText?: string;
+  fontFamily?: string;
+  fontFace?: string;
 };
 
 function escapeHtml(value: string) {
@@ -41,6 +44,8 @@ function escapeHtml(value: string) {
 }
 
 export function brandedClientEmail(input: ClientEmail) {
+  const sans = input.fontFamily || "font-family:Skia,'Skia-Regular',Palatino,'Palatino Linotype',serif;";
+  const face = input.fontFace || serifFace;
   const textLines: string[] = [];
   for (const block of input.blocks) {
     if ("href" in block) textLines.push("", block.label, block.href);
@@ -50,7 +55,10 @@ export function brandedClientEmail(input: ClientEmail) {
     } else if ("rows" in block) {
       textLines.push("");
       for (const row of block.rows) textLines.push(`${row.label}: ${row.value}`);
-    } else textLines.push("", block.strong ? `${block.strong} ${block.text}` : block.text);
+    } else {
+      const linked = block.link ? ` ${block.link.label} (${block.link.href})` : "";
+      textLines.push("", `${block.strong ? `${block.strong} ` : ""}${block.text}${linked}`);
+    }
   }
   textLines.push("", ...input.signoff);
   if (input.footer) textLines.push("", input.footer.label, input.footer.href);
@@ -106,7 +114,10 @@ export function brandedClientEmail(input: ClientEmail) {
       const color = block.muted ? "#6e655c" : "#1c1714";
       const quote = block.quote ? "padding:14px 16px;border-left:2px solid #9a7b49;background:#f3efe8;" : "";
       const lead = block.strong ? `<strong>${escapeHtml(block.strong)}</strong> ` : "";
-      return `<p style="margin:0 0 16px;${sans}font-size:16px;line-height:1.6;color:${color};${quote}">${lead}${escapeHtml(block.text)}</p>`;
+      const linked = block.link
+        ? ` <a href="${escapeHtml(block.link.href)}" style="${sans}color:#9a7b49;text-decoration:underline;">${escapeHtml(block.link.label)}</a>`
+        : "";
+      return `<p style="margin:0 0 16px;${sans}font-size:16px;line-height:1.6;color:${color};${quote}">${lead}${escapeHtml(block.text)}${linked}</p>`;
     })
     .join("");
   const signoff = `<p style="margin:8px 0 0;${sans}font-size:16px;line-height:1.6;color:#1c1714;">${input.signoff.map(escapeHtml).join("<br>")}</p>
@@ -119,15 +130,12 @@ export function brandedClientEmail(input: ClientEmail) {
 <html lang="${escapeHtml(input.lang || "es")}">
   <head>
     <meta charset="utf-8" />
-    <style>
-      body, table, td, p, a, span, font { ${sans} }
-    </style>
   </head>
   <body style="margin:0;padding:0;background:#f4f1ea;${sans}">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ea;${sans}">
       <tr>
         <td align="center" style="padding:36px 16px;${sans}">
-          <font face="Skia, Palatino, serif">
+          <font face="${face}">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;${sans}">
             <tr>
               <td align="center" style="padding:0 0 22px;${sans}">

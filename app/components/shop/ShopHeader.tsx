@@ -35,6 +35,16 @@ export async function ShopHeader() {
             {backLabel}
           </a>
           <LanguageSwitch current={locale} path={path} enabled />
+          <a
+            className="inline-flex size-10 items-center justify-center text-ink"
+            href="/privado"
+            aria-label={t.nav.private}
+          >
+            <svg viewBox="0 0 24 24" className="size-[1.15rem]" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+              <rect x="5" y="11" width="14" height="9" rx="1.5" />
+              <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+            </svg>
+          </a>
           {shopAdmin ? (
             <a className="hidden text-[0.62rem] uppercase tracking-[0.14em] text-gilt hover:text-ink sm:inline" href="/privado/tienda">
               Admin
