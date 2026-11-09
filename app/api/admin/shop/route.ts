@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const form = await request.formData();
   const id = String(form.get("orderId") || "");
   const action = String(form.get("action") || "");
-  const origin = new URL(request.url).origin;
+  const origin = requestOrigin(request);
   const fromList = String(form.get("from") || "") === "list";
   const listBack = String(form.get("return") || "") === "archivo" ? "/privado/tienda?archivo=1" : "/privado/tienda";
   const back = fromList ? listBack : `/privado/tienda/${id}`;
@@ -26,7 +26,10 @@ export async function POST(request: Request) {
       const result = await chargeReserved(id, index, requestOrigin(request));
       if (result.url) return go(request, `${back}?ok=1&cobro=${encodeURIComponent(result.url)}`);
     } else if (action === "release") await releaseOrder(id, origin);
-    else if (action === "ship") await shipOrder(id, String(form.get("tracking") || ""), String(form.get("carrier") || ""), origin);
+    else if (action === "ship") {
+      const sent = await shipOrder(id, String(form.get("tracking") || ""), String(form.get("carrier") || ""), origin);
+      if (!sent) return go(request, withQuery(back, "error", "Pedido enviado. No he podido mandar el correo a la clienta."));
+    }
     else if (action === "refund") await refundOrder(id, origin);
     else if (action === "void") await voidOrder(id, origin);
     else if (action === "delete") await deleteOrder(id, origin);

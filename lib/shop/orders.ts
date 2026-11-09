@@ -484,8 +484,7 @@ export async function shipOrder(id: string, tracking: string, carrier: string, o
     changed = true;
   });
   if (!changed || !order) throw new ShopError("Solo se puede enviar un pedido ya cobrado.");
-  await mailOrder(order, "shipped", origin);
-  return order;
+  return mailOrder(order, "shipped", origin);
 }
 
 export async function refundOrder(id: string, origin: string) {

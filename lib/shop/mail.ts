@@ -57,12 +57,14 @@ export async function mailOrder(order: Order, kind: "authorized" | "confirmed" |
         ? `Ya está confirmado tu pedido ${order.number}. El importe de ${total} queda cobrado y preparo el envío.${reservedNote(order)}\n\n${lines(order)}\n\n${href}`
         : `He dejado tu pedido ${order.number} reservado, sin cobrar de momento.${reservedNote(order)}\n\n${lines(order)}\n\n${href}`,
     cancelled: `He anulado tu pedido ${order.number}. No se ha cobrado nada: si viste una retención en la tarjeta, el banco la libera solo.\n\n${href}`,
-    shipped: `Tu pedido ${order.number} ya ha salido. ${order.carrier ? `Mensajería: ${order.carrier}. ` : ""}Seguimiento: ${order.tracking}.\n\n${href}`,
+    shipped: `Tu pedido ${order.number} está confirmado. ${order.totalCents > 0 ? `El importe de ${total} queda cobrado.` : "De momento no se ha cobrado nada."}${reservedNote(order)}\n\n${lines(order)}\n\nYa ha salido.${order.carrier ? ` Mensajería: ${order.carrier}.` : ""} Código de seguimiento: ${order.tracking}.\n\n${href}`,
     refunded: `He devuelto el importe de tu pedido ${order.number} (${total}). El abono llega a la misma tarjeta.\n\n${href}`,
   }[kind];
-  const studioText = `Pedido ${order.number} de ${who} (${order.email}, ${order.phone}). Estado: ${kind}. Total ${total}.${order.exempt ? " Sin IVA (Canarias, Ceuta o Melilla)." : ""}\n\n${lines(order)}\n\n${order.address.street}, ${order.address.extra}\n${order.address.postalCode} ${order.address.city}, ${order.address.province}\n\n${studio}`;
-  await Promise.all([
+  const tracking = order.tracking ? `\nSeguimiento: ${order.carrier ? `${order.carrier} ` : ""}${order.tracking}` : "";
+  const studioText = `Pedido ${order.number} de ${who} (${order.email}, ${order.phone}). Estado: ${kind}. Total ${total}.${order.exempt ? " Sin IVA (Canarias, Ceuta o Melilla)." : ""}\n\n${lines(order)}\n\n${order.address.street}, ${order.address.extra}\n${order.address.postalCode} ${order.address.city}, ${order.address.province}${tracking}\n\n${studio}`;
+  const [customerSent] = await Promise.all([
     sendShopMail(order.email, `Pedido ${order.number}`, customerText),
     sendShopMail(site.email, `Tienda · ${order.number} · ${kind}`, studioText),
   ]);
+  return customerSent;
 }

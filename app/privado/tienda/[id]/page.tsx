@@ -31,6 +31,7 @@ export default async function StudioOrderPage({
   if (!order) notFound();
   const carrier = order.carrier || "Correos";
   const charge = confirmedCharge(order);
+  const note = chargeNote(charge);
   const open = order.status === "authorized" || order.status === "pending_payment";
 
   return (
@@ -176,7 +177,7 @@ export default async function StudioOrderPage({
               <p className="mt-1 font-serif text-3xl">
                 A cobrar {charge.pending ? "—" : formatMoney(charge.captureCents)}
               </p>
-              <p className="mt-2 text-sm leading-relaxed text-ash">{chargeCopy(charge, order.totalCents)}</p>
+              {note ? <p className="mt-2 text-sm leading-relaxed text-ash">{note}</p> : null}
             </>
           ) : (
             <>
@@ -244,15 +245,9 @@ export default async function StudioOrderPage({
       {open ? (
         <div className="shrink-0 border-t border-ink/10 bg-porcelain py-4">
           <div className="flex max-w-xl flex-col gap-3">
-            {order.status === "pending_payment" ? null : (
-              <p className="text-sm leading-relaxed text-ash">
-                {charge.pending
-                  ? "Cuando cada artículo esté confirmado, reservado o rechazado, el botón cobra solo lo confirmado."
-                  : charge.captureCents > 0
-                    ? `Al finalizar se cargan ${formatMoney(charge.captureCents)}. Lo reservado no se queda retenido en la tarjeta.`
-                    : "Al finalizar no se cobra nada. Las reservas se cobran cuando haya stock."}
-              </p>
-            )}
+            {order.status !== "pending_payment" && charge.pending ? (
+              <p className="text-sm leading-relaxed text-ash">Cuando cada artículo esté confirmado, reservado o rechazado, el botón cobra solo lo confirmado.</p>
+            ) : null}
             <form action="/api/admin/shop" method="post">
               <input type="hidden" name="orderId" value={order.id} />
               <input type="hidden" name="action" value="confirm" />
@@ -278,24 +273,11 @@ export default async function StudioOrderPage({
   );
 }
 
-function chargeCopy(
-  charge: { pending: boolean; droppedCents: number; reservedCents: number; captureCents: number },
-  authorizedCents: number,
-) {
+function chargeNote(charge: { pending: boolean; droppedCents: number; reservedCents: number }) {
   if (charge.pending) {
     return "Marca cada artículo. Confirmar entra en este cobro. Reservar se deja para cuando haya stock. Rechazar sale del total.";
   }
-  if (charge.reservedCents === 0 && charge.droppedCents === 0) return "Todo confirmado. Se cobra el importe autorizado.";
-  const parts = [
-    charge.captureCents > 0
-      ? `La tarjeta tenía ${formatMoney(authorizedCents)} apartados y se cargan ${formatMoney(charge.captureCents)}.`
-      : "No se cobra nada ahora. Se anula la retención de la tarjeta.",
-  ];
-  if (charge.reservedCents > 0) {
-    parts.push(
-      `Reservado ${formatMoney(charge.reservedCents)}: el banco suelta lo que no se cobra y la retención caduca en unos 7 días, así que esa parte se cobra aparte cuando haya stock.`,
-    );
-  }
-  if (charge.droppedCents > 0) parts.push(`Rechazado ${formatMoney(charge.droppedCents)}, no se cobra.`);
-  return parts.join(" ");
+  if (charge.droppedCents > 0) return `Rechazado ${formatMoney(charge.droppedCents)}, no se cobra.`;
+  if (charge.reservedCents === 0) return "Todo confirmado. Se cobra el importe autorizado.";
+  return "";
 }
