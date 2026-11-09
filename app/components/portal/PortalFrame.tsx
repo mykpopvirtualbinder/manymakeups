@@ -19,7 +19,7 @@ export async function PortalFrame({
 }: {
   kicker: string;
   title: string;
-  lead?: string;
+  lead?: ReactNode;
   aside?: ReactNode;
   children: ReactNode;
   localize?: boolean;

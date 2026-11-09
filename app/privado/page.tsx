@@ -22,7 +22,15 @@ export default async function StudioLoginPage({
     <PortalFrame
       kicker="Estudio"
       title="Área privada."
-      lead="Solo para el atelier. Desde aquí abres cuentas a las clientas y cuelgas contratos o presupuestos."
+      lead={
+        <>
+          Área privada el equipo de Many Makeups. Si estás buscando tu área privada, pincha{" "}
+          <a className="text-ink underline" href="/area-novia">
+            aquí
+          </a>
+          .
+        </>
+      }
     >
       {error === "acceso" ? <PortalNotice>Contraseña incorrecta.</PortalNotice> : null}
       {missing ? (
