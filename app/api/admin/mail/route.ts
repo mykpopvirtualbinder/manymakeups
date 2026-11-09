@@ -16,7 +16,7 @@ import {
 import { binderAct, binderMailError, binderUnseen, listBinder, readBinder, readBinderFile } from "@/lib/portal/binder-mail";
 import { hotmailAct, hotmailMailError, hotmailUnseen, listHotmail, readHotmail, readHotmailFile, sendHotmail } from "@/lib/portal/microsoft-mail";
 import { MAILBOXES, mailboxByKey, type MailFolder, type MailboxKey } from "@/lib/portal/mailboxes";
-import { PREVIEW_MAIL_ID, mailPreviewEnabled, previewMessage, previewSummary } from "@/lib/portal/mail-preview";
+import { mailPreviewEnabled, previewById, previewSummaries } from "@/lib/portal/mail-preview";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -63,8 +63,9 @@ export async function GET(req: Request) {
       /* Hotmail stays quiet until it is connected */
     }
     if (mailPreviewEnabled()) {
-      counts.info += 1;
-      items.unshift({ id: PREVIEW_MAIL_ID, account: "info", from: previewSummary().from, subject: previewSummary().subject });
+      const samples = previewSummaries();
+      counts.info += samples.length;
+      items.unshift(...samples.map((row) => ({ id: row.id, account: "info" as const, from: row.from, subject: row.subject })));
     }
     return NextResponse.json({ counts, items });
   }
@@ -141,7 +142,7 @@ export async function GET(req: Request) {
         /* atelier mail still opens if Hotmail is quiet */
       }
       messages.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
-      if (mailPreviewEnabled() && folder === "inbox") messages.unshift(previewSummary());
+      if (mailPreviewEnabled() && folder === "inbox") messages.unshift(...previewSummaries());
       return NextResponse.json({ messages: messages.slice(0, 300) });
     } catch (err) {
       const pub = publicMailError(err);
@@ -153,8 +154,9 @@ export async function GET(req: Request) {
 
   const fileId = url.searchParams.get("file") || "";
   const messageId = url.searchParams.get("id") || "";
-  if (mailPreviewEnabled() && messageId === PREVIEW_MAIL_ID) {
-    return NextResponse.json({ message: previewMessage() });
+  if (mailPreviewEnabled() && messageId) {
+    const sample = previewById(messageId);
+    if (sample) return NextResponse.json({ message: sample });
   }
 
   try {
@@ -190,7 +192,9 @@ export async function GET(req: Request) {
       if (!(mailPreviewEnabled() && box.key === "info" && folder === "inbox")) throw err;
     }
     if (mailPreviewEnabled() && box.key === "info" && folder === "inbox") {
-      messages = [previewSummary(), ...messages.filter((row) => row.id !== PREVIEW_MAIL_ID)];
+      const samples = previewSummaries();
+      const ids = new Set(samples.map((row) => row.id));
+      messages = [...samples, ...messages.filter((row) => !ids.has(row.id))];
     }
     return NextResponse.json({ messages });
   } catch (err) {
