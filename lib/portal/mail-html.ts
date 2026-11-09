@@ -17,7 +17,7 @@ const DETAIL_ICONS = {
 export type DetailIcon = keyof typeof DETAIL_ICONS;
 
 type MailBlock =
-  | { text: string; muted?: boolean; quote?: boolean; strong?: string }
+  | { text: string; muted?: boolean; quote?: boolean; strong?: string; link?: { href: string; label: string } }
   | { href: string; label: string }
   | { rows: { label: string; value: string }[] }
   | { details: { title: string; rows: { icon: DetailIcon; label: string; value: string }[] } };
@@ -50,7 +50,10 @@ export function brandedClientEmail(input: ClientEmail) {
     } else if ("rows" in block) {
       textLines.push("");
       for (const row of block.rows) textLines.push(`${row.label}: ${row.value}`);
-    } else textLines.push("", block.strong ? `${block.strong} ${block.text}` : block.text);
+    } else {
+      const linked = block.link ? ` ${block.link.label} (${block.link.href})` : "";
+      textLines.push("", `${block.strong ? `${block.strong} ` : ""}${block.text}${linked}`);
+    }
   }
   textLines.push("", ...input.signoff);
   if (input.footer) textLines.push("", input.footer.label, input.footer.href);
@@ -106,7 +109,10 @@ export function brandedClientEmail(input: ClientEmail) {
       const color = block.muted ? "#6e655c" : "#1c1714";
       const quote = block.quote ? "padding:14px 16px;border-left:2px solid #9a7b49;background:#f3efe8;" : "";
       const lead = block.strong ? `<strong>${escapeHtml(block.strong)}</strong> ` : "";
-      return `<p style="margin:0 0 16px;${sans}font-size:16px;line-height:1.6;color:${color};${quote}">${lead}${escapeHtml(block.text)}</p>`;
+      const linked = block.link
+        ? ` <a href="${escapeHtml(block.link.href)}" style="${sans}color:#9a7b49;text-decoration:underline;">${escapeHtml(block.link.label)}</a>`
+        : "";
+      return `<p style="margin:0 0 16px;${sans}font-size:16px;line-height:1.6;color:${color};${quote}">${lead}${escapeHtml(block.text)}${linked}</p>`;
     })
     .join("");
   const signoff = `<p style="margin:8px 0 0;${sans}font-size:16px;line-height:1.6;color:#1c1714;">${input.signoff.map(escapeHtml).join("<br>")}</p>

@@ -1,3 +1,4 @@
+import { SHIPPED_SUBJECT, shipmentLetter } from "@/lib/shop/mail";
 import type { MailRecord, MailSummary } from "./mail-store";
 
 export const PREVIEW_MAIL_ID = "preview-lectura";
@@ -51,7 +52,7 @@ export function previewMessage(): MailRecord {
 
 const ORDER_FROM = "Many Makeups <info@manymakeups.com>";
 const ORDER_TO = "Lucía Ferrer <lucia.ferrer@example.com>";
-const ORDER_SUBJECT = "Ejemplo · Pedido P-2026-0005";
+const ORDER_SUBJECT = SHIPPED_SUBJECT;
 
 export function orderPreviewSummary(): MailSummary {
   return {
@@ -69,22 +70,25 @@ export function orderPreviewSummary(): MailSummary {
 }
 
 export function orderPreviewMessage(): MailRecord {
-  const text = [
-    "Este mensaje es un ejemplo del correo que recibiría la clienta. No es un mensaje real y no sale del ordenador. El asunto real sería Pedido P-2026-0005.",
-    "Tu pedido P-2026-0005 está confirmado. El importe de 159,85 € queda cobrado.",
-    "Queda reservado 77,35 €, sin cobrar todavía. Ese importe se cobra cuando haya stock.",
-    "- 1 x Color uniforme, 50 cm · 200 g · 9 capas, color 04\n- 1 x Color uniforme, 50 cm · 60 g · 1 capa, color 613 (reservado, se cobra cuando haya stock)",
-    "Ya ha salido. Mensajería: Correos. Código de seguimiento: PQ123456789ES.",
-    "https://www.manymakeups.com/tienda/pedido/muestra-0005",
-  ].join("\n\n");
-  const html = text
-    .split("\n\n")
-    .map((paragraph) => `<p>${paragraph.replaceAll("\n", "<br>")}</p>`)
-    .join("");
+  const letter = shipmentLetter(
+    {
+      firstName: "Lucía",
+      number: "P-2026-0002",
+      totalCents: 7735,
+      carrier: "Correos",
+      tracking: "PQ123456789ES",
+      address: "Calle Mayor 12, 2º. 12001 Castellón",
+      lines: [
+        { qty: 1, name: "Color uniforme, 50 cm · 140 g · 8 capas", color: "02", stock: "no", lineChargeCents: 12235 },
+        { qty: 1, name: "Color uniforme, 50 cm · 60 g · 1 capa", color: "06", stock: "yes", lineChargeCents: 7735 },
+      ],
+    },
+    "https://www.manymakeups.com/tienda/pedido/muestra-0002",
+  );
   return {
     ...orderPreviewSummary(),
-    text,
-    html,
+    text: letter.text,
+    html: letter.html,
     inReplyTo: "",
     attachments: [],
   };
