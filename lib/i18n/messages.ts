@@ -37,6 +37,7 @@ export type Messages = {
     backToShop: string;
     principal: string;
     language: string;
+    private: string;
   };
   common: {
     book: string;
@@ -171,6 +172,7 @@ export const es: Messages = {
     backToShop: "Volver a la tienda",
     principal: "Principal",
     language: "Idioma",
+    private: "Privado",
   },
   common: {
     book: "Reservar cita",
@@ -518,6 +520,7 @@ export const en: Messages = {
     backToShop: "Back to the shop",
     principal: "Main",
     language: "Language",
+    private: "Private",
   },
   common: {
     book: "Book an appointment",
@@ -864,6 +867,7 @@ export const fr: Messages = {
     backToShop: "Retour à la boutique",
     principal: "Principal",
     language: "Langue",
+    private: "Privé",
   },
   common: {
     book: "Réserver un rendez-vous",

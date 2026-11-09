@@ -1,16 +1,12 @@
 ---
-description: Always commit and push completed site work to production
+description: Do not deploy until the user explicitly says so
 alwaysApply: true
 ---
 
-# Always deploy to production
+# No deploy until asked
 
-When the user asks for a change on this site, finish by putting it on production without waiting to be asked:
+Do not deploy, merge to `main`, or push to production until the user explicitly says to deploy.
 
-1. Commit the relevant files (concise message focused on why).
-2. Push the current branch to `origin` (`git push -u origin HEAD`). Production is Vercel on `main`.
-3. Return the production URL or confirm the push succeeded.
-
-Do not ask first. Do not leave finished work only on the local machine.
+Work stays on the current feature branch. Commit and push that branch when the change should be saved, and leave production (`main` / Vercel) untouched.
 
 Never force-push, skip hooks, amend a pushed commit, or update git config unless the user explicitly requests that.

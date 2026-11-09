@@ -24,6 +24,7 @@ export async function SiteDock() {
         { href: localePath(locale, "/#metodo"), label: t.nav.metodo },
         { href: localePath(locale, "/#ana"), label: t.nav.about },
         { href: localePath(locale, "/#contacto"), label: t.nav.contact },
+        { href: "/privado", label: t.nav.private },
       ]}
     />
   );
