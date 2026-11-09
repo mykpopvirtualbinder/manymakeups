@@ -76,6 +76,7 @@ export type Order = {
   shippedAt: string;
   cancelledAt: string;
   refundedAt: string;
+  archivedAt?: string;
 };
 
 export type ShopDb = {

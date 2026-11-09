@@ -176,6 +176,7 @@ export async function placeOrder(customer: Customer, input: CheckoutInput, origi
     shippedAt: "",
     cancelledAt: "",
     refundedAt: "",
+    archivedAt: "",
   };
 
   await mutateShop((db) => {
@@ -513,6 +514,38 @@ export async function refundOrder(id: string, origin: string) {
   if (!changed || !order) throw new ShopError("No he podido reembolsar el pedido.");
   await mailOrder(order, "refunded", origin);
   return order;
+}
+
+export async function voidOrder(id: string, origin: string) {
+  const order = await getOrder(id);
+  if (!order) throw new ShopError("Ese pedido ya no está.");
+  if (order.status === "confirmed" || order.status === "shipped") return refundOrder(id, origin);
+  if (order.status === "authorized" || order.status === "pending_payment") return releaseOrder(id, origin);
+  throw new ShopError("Este pedido ya está anulado.");
+}
+
+export async function deleteOrder(id: string, origin: string) {
+  const order = await getOrder(id);
+  if (!order) throw new ShopError("Ese pedido ya no está.");
+  if (order.status === "confirmed" || order.status === "shipped") {
+    throw new ShopError("Anula el pedido antes de borrarlo, para devolver el dinero.");
+  }
+  if (order.status === "authorized" || order.status === "pending_payment") await releaseOrder(id, origin);
+  const removed = await mutateShop((db) => {
+    const index = db.orders.findIndex((item) => item.id === id);
+    if (index < 0) return false;
+    db.orders.splice(index, 1);
+    return true;
+  });
+  if (!removed) throw new ShopError("No he podido borrar el pedido.");
+}
+
+export async function setOrderArchived(id: string, archived: boolean) {
+  const saved = await patchOrder(id, (current) => {
+    current.archivedAt = archived ? stamp() : "";
+  });
+  if (!saved) throw new ShopError("No he podido archivar el pedido.");
+  return saved;
 }
 
 export async function applyStripeEvent(paymentIntentId: string, status: string) {
