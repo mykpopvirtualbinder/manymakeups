@@ -28,6 +28,10 @@ type MailMessage = MailSummary & {
   attachments: MailFile[];
 };
 
+function mailPreviewHtml(html: string) {
+  return html.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "").replace(/<\/?(?:html|head|body)\b[^>]*>/gi, "");
+}
+
 type Counts = Record<DeskKey, number>;
 
 const FOLDERS: Array<{ id: MailFolder; label: string }> = [
@@ -1061,7 +1065,7 @@ export function MailDesk() {
                 <p className="text-sm text-ash">{place.folder === "sent" ? selected.to : selected.from}</p>
                 <p className="mt-1 text-[0.72rem] text-ash">Para {selected.to} · {formatWhen(selected.createdAt)}</p>
                 {selected.html ? (
-                  <div className="mt-6 text-sm leading-relaxed [&_img]:max-w-full [&_table]:max-w-full" dangerouslySetInnerHTML={{ __html: selected.html }} />
+                  <div className="mt-6 text-sm leading-relaxed [&_img]:max-w-full [&_table]:max-w-full" dangerouslySetInnerHTML={{ __html: mailPreviewHtml(selected.html) }} />
                 ) : (
                   <pre className="mt-6 whitespace-pre-wrap font-sans text-sm leading-relaxed">{selected.text || "(sin texto)"}</pre>
                 )}

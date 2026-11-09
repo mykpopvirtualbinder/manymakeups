@@ -1,4 +1,5 @@
 import { brandedClientEmail } from "@/lib/portal/mail-html";
+import { MAIL_FONT } from "@/lib/portal/mail-text";
 import { site } from "@/lib/site";
 import { formatMoney } from "./quote";
 import type { LineStock, Order } from "./types";
@@ -61,6 +62,8 @@ export function shipmentLetter(
     ],
     signoff: ["Muchas gracias por tu pedido."],
     footer: { href, label: "Ver tu pedido" },
+    fontFamily: `font-family:${MAIL_FONT};`,
+    fontFace: "Outfit, Avenir Next, Century Gothic, Trebuchet MS, sans-serif",
   });
 }
 
