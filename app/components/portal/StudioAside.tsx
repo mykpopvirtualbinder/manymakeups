@@ -5,12 +5,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 export async function StudioAside({ extra }: { extra?: ReactNode }) {
-  let unread = 0;
-  try {
-    unread = (await listNotices()).filter((notice) => !notice.read).length;
-  } catch (err) {
-    if (!portalStoreClosed(err)) throw err;
-  }
   const item = "flex min-h-11 w-full items-center border-b border-ink/10 text-sm uppercase tracking-[0.14em] text-ash hover:text-ink md:min-h-0 md:w-auto md:border-0 md:text-[0.68rem] md:tracking-[0.18em]";
   return (
     <div className="flex w-full flex-col md:w-auto md:flex-row md:flex-wrap md:items-center md:justify-end md:gap-x-4 md:gap-y-2">
@@ -31,7 +25,6 @@ export async function StudioAside({ extra }: { extra?: ReactNode }) {
       <Link className={item} href="/privado/difusion">
         Difusión
       </Link>
-      <InboxLink unread={unread} />
       <form className="w-full md:w-auto" action="/api/portal/logout?next=/privado" method="post">
         <button className={item} type="submit">
           Salir
@@ -39,4 +32,14 @@ export async function StudioAside({ extra }: { extra?: ReactNode }) {
       </form>
     </div>
   );
+}
+
+export async function StudioInbox() {
+  let unread = 0;
+  try {
+    unread = (await listNotices()).filter((notice) => !notice.read).length;
+  } catch (err) {
+    if (!portalStoreClosed(err)) throw err;
+  }
+  return <InboxLink unread={unread} />;
 }
