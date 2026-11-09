@@ -39,11 +39,18 @@ export default async function StudioOrderPage({
       wide
       kicker={order.number}
       title={statusLabel(order.status)}
-      lead={`${order.firstName} ${order.lastName} · ${order.email} · ${order.phone}`}
       aside={<StudioAside />}
     >
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
         <ShopAdminNav current="pedidos" />
+        <div className="mb-8 flex flex-wrap gap-3">
+          <a className="btn-atelier" href="/privado/tienda">
+            Volver a pedidos
+          </a>
+          <a className="btn-atelier" href="/privado/tienda/clientes">
+            Volver a clientes
+          </a>
+        </div>
         {query.error ? <PortalNotice>{query.error}</PortalNotice> : null}
         {query.ok ? <PortalNotice>Pedido actualizado.</PortalNotice> : null}
         <div className="grid max-w-3xl gap-6 sm:grid-cols-2">

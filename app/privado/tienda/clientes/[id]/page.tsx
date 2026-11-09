@@ -30,18 +30,47 @@ export default async function StudioCustomerPage({ params }: { params: Promise<{
       wide
       kicker="Cliente"
       title={`${customer.firstName} ${customer.lastName}`}
-      lead={`${customer.email} · ${customer.phone}`}
       aside={<StudioAside />}
     >
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
         <ShopAdminNav current="clientes" />
-        {vip ? <p className="mb-4 text-[0.68rem] uppercase tracking-[0.18em] text-gilt">VIP · Admin</p> : null}
-        <p className="text-sm leading-relaxed text-ash">
-          {customer.street}
-          {customer.extra ? `, ${customer.extra}` : ""}. {customer.postalCode} {customer.city}, {customer.province}.
-          {customer.dni ? ` DNI ${customer.dni}.` : ""}
-        </p>
-        <ul className="mt-8 divide-y divide-ink/10 border-y border-ink/10">
+        <div className="mb-8 flex flex-wrap gap-3">
+          <a className="btn-atelier" href="/privado/tienda/clientes">
+            Volver a clientes
+          </a>
+          <a className="btn-atelier" href="/privado/tienda">
+            Volver a pedidos
+          </a>
+        </div>
+        <section>
+          <p className="text-[0.68rem] uppercase tracking-[0.18em] text-ash">Datos</p>
+          {vip ? <p className="mt-2 text-[0.68rem] uppercase tracking-[0.18em] text-gilt">VIP · Admin</p> : null}
+          <p className="mt-2 text-sm leading-relaxed text-ink">
+            {customer.email}
+            <br />
+            {customer.phone}
+            <br />
+            {customer.street}
+            {customer.extra ? (
+              <>
+                <br />
+                {customer.extra}
+              </>
+            ) : null}
+            <br />
+            {customer.postalCode} {customer.city}
+            <br />
+            {customer.province}
+            {customer.dni ? (
+              <>
+                <br />
+                DNI {customer.dni}
+              </>
+            ) : null}
+          </p>
+        </section>
+        <h2 className="mt-10 font-serif text-2xl">Pedidos</h2>
+        <ul className="mt-4 divide-y divide-ink/10 border-y border-ink/10">
           {orders.map((order) => (
             <li key={order.id}>
               <a className="flex flex-col gap-1 py-4 hover:text-gilt sm:flex-row sm:items-center sm:justify-between" href={`/privado/tienda/${order.id}`}>
