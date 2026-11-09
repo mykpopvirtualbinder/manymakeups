@@ -24,7 +24,7 @@ export default async function StudioLoginPage({
       title="Área privada."
       lead={
         <>
-          Área privada el equipo de Many Makeups. Si estás buscando tu área privada, pincha{" "}
+          Área privada del equipo de Many Makeups. Si estás buscando tu área privada, pincha{" "}
           <a className="text-ink underline" href="/area-novia">
             aquí
           </a>
