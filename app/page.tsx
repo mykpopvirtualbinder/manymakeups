@@ -12,6 +12,7 @@ import { SiteFooter } from "./components/SiteFooter";
 import { SiteHeader } from "./components/SiteHeader";
 import { getPhotos } from "@/lib/photos";
 import { getLocale, getMessages, localePath, pageMeta } from "@/lib/i18n";
+import { shopIntro } from "@/lib/shop/intro";
 import type { Metadata } from "next";
 import Image from "next/image";
 
@@ -137,6 +138,19 @@ export default async function Home() {
             },
           }}
         />
+
+        <section id="extensiones" className="border-t border-ink/10 py-20">
+          <div className="mx-auto grid max-w-[1120px] gap-8 px-6 md:grid-cols-[1fr_auto] md:items-end md:px-10">
+            <div>
+              <p className="text-[0.68rem] uppercase tracking-[0.32em] text-gilt">{shopIntro[locale].home.kicker}</p>
+              <h2 className="mt-3 font-serif text-4xl md:text-5xl">{shopIntro[locale].home.title}</h2>
+              <p className="mt-4 max-w-2xl text-ash">{shopIntro[locale].home.body}</p>
+            </div>
+            <a className="btn-atelier" href={localePath(locale, "/tienda")}>
+              {shopIntro[locale].home.cta}
+            </a>
+          </div>
+        </section>
 
         <section id="cambio" className="border-t border-ink/10 py-24">
           <div className="mx-auto max-w-[1120px] px-6 md:px-10">

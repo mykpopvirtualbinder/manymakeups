@@ -4,6 +4,15 @@ import { localePath } from "@/lib/i18n/path";
 import { products } from "@/lib/shop/catalog";
 import { services, site } from "@/lib/site";
 
+function priorityFor(path: string) {
+  if (path === "/") return 1;
+  if (path === "/parejas" || path === "/eventos") return 0.9;
+  if (path === "/formacion" || path === "/piel" || path === "/profesionales") return 0.8;
+  if (path === "/tienda") return 0.6;
+  if (path.startsWith("/tienda/")) return 0.5;
+  return 0.3;
+}
+
 const yearly = new Set([
   "/aviso-legal",
   "/privacidad",
@@ -32,7 +41,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${site.url}${localePath(locale, path)}`,
       lastModified,
       changeFrequency: (yearly.has(path) ? "yearly" : "monthly") as "yearly" | "monthly",
-      priority: path === "/" ? 1 : path.startsWith("/tienda") ? 0.7 : 0.4,
+      priority: priorityFor(path),
       alternates: { languages },
     }));
   });

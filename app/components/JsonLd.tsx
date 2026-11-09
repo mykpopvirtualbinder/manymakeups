@@ -40,6 +40,18 @@ export async function JsonLd() {
           name: t.common.book,
           target: site.calendlyUrl,
         },
+        subOrganization: {
+          "@type": "OnlineStore",
+          "@id": `${site.url}/tienda#shop`,
+          name:
+            locale === "en"
+              ? "Many Makeups clip-in extensions"
+              : locale === "fr"
+                ? "Extensions à clips Many Makeups"
+                : "Extensiones de clip Many Makeups",
+          url: `${site.url}${localePath(locale, "/tienda")}`,
+          parentOrganization: { "@id": `${site.url}/#salon` },
+        },
         hasOfferCatalog: {
           "@type": "OfferCatalog",
           name: "Atelier Many Makeups",

@@ -6,6 +6,14 @@ export const shopIntro: Record<
     kicker: string;
     title: string;
     description: string;
+    lead: string;
+    seoTitle: string;
+    seoDescription: string;
+    faqsTitle: string;
+    faqs: { q: string; a: string }[];
+    home: { kicker: string; title: string; body: string; cta: string };
+    crumbHome: string;
+    crumbShop: string;
     sections: { heading?: string; paragraphs: string[] }[];
     chartAlt: string;
     priceNote: string;
@@ -25,6 +33,37 @@ export const shopIntro: Record<
     kicker: "Tienda",
     title: "Extensiones.",
     description: "Extensiones de clip 100 % naturales. Envío a toda España. Gratis por encima de 100 € y 2,90 € por debajo.",
+    lead: "Extensiones de clip de cabello 100 % natural, sistema REMY. Las preparo en el atelier y las envío a toda España.",
+    seoTitle: "Extensiones de clip de cabello natural",
+    seoDescription:
+      "Proveedor de extensiones de clip 100 % naturales, sistema REMY, con envío a toda España. Many Makeups, el atelier de Ana Zarza en Nules, las prepara y las envía. Gratis desde 100 €.",
+    faqsTitle: "Preguntas sobre las extensiones",
+    faqs: [
+      {
+        q: "¿Sois proveedor de extensiones de cabello?",
+        a: "Sí. Many Makeups prepara y envía extensiones de clip de cabello 100 % natural, sistema REMY, a toda España. Es la tienda del atelier, aparte del maquillaje y el peinado para bodas y eventos.",
+      },
+      {
+        q: "¿Las extensiones son de pelo natural?",
+        a: "Sí. Todo el catálogo es cabello natural con la cutícula en la misma dirección, el sistema REMY, con doble costura y clips metálicos con silicona.",
+      },
+      {
+        q: "¿Enviáis las extensiones a toda España?",
+        a: "Sí. El envío es gratis por encima de 100 € y cuesta 2,90 € por debajo. En Canarias, Ceuta y Melilla el IVA se descuenta al pagar.",
+      },
+      {
+        q: "¿Las extensiones sustituyen al maquillaje de eventos?",
+        a: "No. El oficio del atelier sigue siendo el maquillaje y el peinado para bodas y eventos. Las extensiones son una línea más, para quien quiere el pelo además del estilismo.",
+      },
+    ],
+    home: {
+      kicker: "También",
+      title: "Extensiones de clip.",
+      body: "El atelier sigue siendo el maquillaje y el peinado para bodas y eventos. Además, preparo extensiones de clip de cabello 100 % natural y las envío a toda España.",
+      cta: "Ver las extensiones",
+    },
+    crumbHome: "Inicio",
+    crumbShop: "Extensiones",
     sections: [
       {
         heading: "Descubre nuestra colección de Extensiones de Clip 100 % Naturales",
@@ -76,6 +115,37 @@ export const shopIntro: Record<
     kicker: "Shop",
     title: "Extensions.",
     description: "100% natural clip-in extensions. Delivery throughout Spain. Free over €100, otherwise €2.90.",
+    lead: "100% natural REMY clip-in hair extensions. I prepare them at the atelier and ship them throughout Spain.",
+    seoTitle: "Natural clip-in hair extensions",
+    seoDescription:
+      "Supplier of 100% natural REMY clip-in extensions, delivered throughout Spain. Many Makeups, Ana Zarza’s atelier in Nules, prepares and ships them. Free delivery over €100.",
+    faqsTitle: "Questions about the extensions",
+    faqs: [
+      {
+        q: "Do you supply hair extensions?",
+        a: "Yes. Many Makeups prepares and ships 100% natural REMY clip-in extensions throughout Spain. It is the atelier’s shop, separate from makeup and hair for weddings and events.",
+      },
+      {
+        q: "Is the hair natural?",
+        a: "Yes. The whole catalogue is natural hair with the cuticle in one direction, the REMY system, double-stitched, with metal clips backed in silicone.",
+      },
+      {
+        q: "Do you deliver throughout Spain?",
+        a: "Yes. Delivery is free over €100 and €2.90 below that. VAT is removed at checkout for the Canary Islands, Ceuta and Melilla.",
+      },
+      {
+        q: "Do the extensions replace event makeup?",
+        a: "No. The atelier’s work remains makeup and hair for weddings and events. The extensions are an extra line, for anyone who wants the hair as well as the styling.",
+      },
+    ],
+    home: {
+      kicker: "Also",
+      title: "Clip-in extensions.",
+      body: "The atelier remains makeup and hair for weddings and events. Alongside that, I prepare 100% natural clip-in extensions and ship them throughout Spain.",
+      cta: "See the extensions",
+    },
+    crumbHome: "Home",
+    crumbShop: "Extensions",
     sections: [
       {
         heading: "Our 100% natural clip-in extensions",
@@ -127,6 +197,37 @@ export const shopIntro: Record<
     kicker: "Boutique",
     title: "Extensions.",
     description: "Extensions à clips 100 % naturelles. Livraison dans toute l'Espagne. Offerte au-dessus de 100 €, sinon 2,90 €.",
+    lead: "Extensions à clips en cheveux 100 % naturels, système REMY. Je les prépare à l’atelier et je les envoie dans toute l’Espagne.",
+    seoTitle: "Extensions à clips en cheveux naturels",
+    seoDescription:
+      "Fournisseur d’extensions à clips 100 % naturelles, système REMY, livrées dans toute l’Espagne. Many Makeups, l’atelier d’Ana Zarza à Nules, les prépare et les expédie. Offertes dès 100 €.",
+    faqsTitle: "Questions sur les extensions",
+    faqs: [
+      {
+        q: "Fournissez-vous des extensions de cheveux ?",
+        a: "Oui. Many Makeups prépare et envoie des extensions à clips en cheveux 100 % naturels, système REMY, dans toute l’Espagne. C’est la boutique de l’atelier, à part du maquillage et de la coiffure pour les mariages et les événements.",
+      },
+      {
+        q: "Les cheveux sont-ils naturels ?",
+        a: "Oui. Tout le catalogue est en cheveux naturels, cuticule dans le même sens, système REMY, double couture et clips métalliques avec silicone.",
+      },
+      {
+        q: "Livrez-vous dans toute l’Espagne ?",
+        a: "Oui. La livraison est offerte au-dessus de 100 € et coûte 2,90 € en dessous. La TVA est retirée au paiement pour les Canaries, Ceuta et Melilla.",
+      },
+      {
+        q: "Les extensions remplacent-elles le maquillage d’événement ?",
+        a: "Non. Le métier de l’atelier reste le maquillage et la coiffure pour les mariages et les événements. Les extensions sont une ligne de plus, pour qui veut les cheveux en plus du stylisme.",
+      },
+    ],
+    home: {
+      kicker: "Aussi",
+      title: "Extensions à clips.",
+      body: "L’atelier reste le maquillage et la coiffure pour les mariages et les événements. En plus, je prépare des extensions à clips en cheveux 100 % naturels et je les envoie dans toute l’Espagne.",
+      cta: "Voir les extensions",
+    },
+    crumbHome: "Accueil",
+    crumbShop: "Extensions",
     sections: [
       {
         heading: "Notre collection d'extensions à clips 100 % naturelles",
