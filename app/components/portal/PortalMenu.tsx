@@ -57,14 +57,14 @@ export function PortalMenu({
         aria-label={label}
         className={
           open
-            ? "portal-actions fixed inset-0 z-[80] flex flex-col items-start gap-1 overflow-y-auto bg-porcelain px-6 pb-[calc(4.4rem+env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] md:static md:z-auto md:flex-row md:items-center md:gap-4 md:overflow-visible md:bg-transparent md:p-0 md:pb-0"
+            ? "portal-actions fixed inset-0 z-[80] flex flex-col items-stretch gap-0 overflow-y-auto bg-porcelain px-6 pb-[calc(4.4rem+env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] md:static md:z-auto md:flex-row md:items-center md:gap-4 md:overflow-visible md:bg-transparent md:p-0 md:pb-0"
             : "portal-actions hidden md:flex md:flex-row md:items-center md:gap-4"
         }
         onClick={(event) => {
           if ((event.target as HTMLElement).closest("a")) setOpen(false);
         }}
       >
-        <div className="mb-8 flex w-full justify-end md:hidden">
+        <div className="mb-4 flex w-full justify-end md:hidden">
           <button
             type="button"
             className="min-h-11 px-1 text-[0.68rem] uppercase tracking-[0.18em] text-ash"

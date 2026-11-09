@@ -55,7 +55,7 @@ export async function PortalFrame({
             {studio && aside ? (
               <PortalMenu label={copy.menu} closeLabel={copy.agendaClose}>
                 {aside}
-                <a className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href={backHref}>
+                <a className="flex min-h-11 w-full items-center border-b border-ink/10 text-sm uppercase tracking-[0.14em] text-ash hover:text-ink md:min-h-0 md:w-auto md:border-0 md:text-[0.68rem] md:tracking-[0.18em]" href={backHref}>
                   {backLabel}
                 </a>
               </PortalMenu>

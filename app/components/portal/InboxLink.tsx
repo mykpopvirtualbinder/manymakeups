@@ -5,7 +5,7 @@ export function InboxLink({ unread }: { unread: number }) {
   return (
     <a
       href="/privado/avisos"
-      className="relative inline-flex min-h-11 items-center gap-2 text-ink hover:text-gilt md:size-10 md:min-h-0 md:justify-center"
+      className="relative flex min-h-11 w-full items-center gap-2 border-b border-ink/10 text-ink hover:text-gilt md:size-10 md:min-h-0 md:w-auto md:justify-center md:border-0"
       aria-label={label}
       title={label}
     >
