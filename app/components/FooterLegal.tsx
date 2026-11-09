@@ -21,10 +21,9 @@ export function FooterLegal({
         onClick={() => setOpen((value) => !value)}
       >
         <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
-          <path d="M7 3.5h7l5 5V20.5H7z" />
-          <path d="M14 3.5V9h5" />
-          <path d="M9.5 13h5" />
-          <path d="M9.5 16.5h5" />
+          <circle cx="12" cy="12" r="8" />
+          <path d="M12 11v5" />
+          <path d="M12 8h.01" strokeWidth="2.4" strokeLinecap="round" />
         </svg>
       </button>
       {open ? (
