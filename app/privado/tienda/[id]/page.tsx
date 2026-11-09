@@ -20,12 +20,13 @@ export default async function StudioOrderPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string; ok?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; cobro?: string }>;
 }) {
   const admin = await requireShopStaff();
   if (!admin) redirect("/privado");
   const { id } = await params;
   const query = await searchParams;
+  const cobro = query.cobro && /^https?:\/\//.test(query.cobro) ? query.cobro : "";
   const order = await getOrder(id);
   if (!order) notFound();
   const carrier = order.carrier || "Correos";
@@ -50,6 +51,14 @@ export default async function StudioOrderPage({
         <ShopAdminNav current="pedidos" />
         {query.error ? <PortalNotice>{query.error}</PortalNotice> : null}
         {query.ok ? <PortalNotice>Pedido actualizado.</PortalNotice> : null}
+        {cobro ? (
+          <p className="mt-4 max-w-xl text-sm leading-relaxed text-ink">
+            Enlace para la clienta:{" "}
+            <a className="break-all underline" href={cobro}>
+              {cobro}
+            </a>
+          </p>
+        ) : null}
         <div className="grid max-w-3xl gap-6 sm:grid-cols-2">
           <section>
             <p className="text-[0.68rem] uppercase tracking-[0.18em] text-ash">Envío</p>
@@ -84,7 +93,7 @@ export default async function StudioOrderPage({
         {order.exempt ? <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink">{EXEMPT_INVOICE_NOTE}</p> : null}
         <ul className="mt-6 max-w-3xl divide-y divide-ink/10 border-y border-ink/10">
           {order.lines.map((line, index) => {
-            const stock = line.stock === "yes" || line.stock === "no" ? line.stock : "pending";
+            const stock = line.stock === "yes" || line.stock === "no" || line.stock === "reserved" ? line.stock : "pending";
             return (
               <li key={`${line.productId}-${line.color}-${index}`} className="flex flex-col gap-3 py-4">
                 <div className="flex items-start justify-between gap-4">
@@ -116,9 +125,42 @@ export default async function StudioOrderPage({
                     >
                       {stock === "no" ? "Rechazado" : "Rechazar"}
                     </button>
+                    <button
+                      className={stock === "reserved" ? "btn-atelier-solid btn-atelier" : "btn-atelier"}
+                      name="stock"
+                      value="reserved"
+                      type="submit"
+                    >
+                      {stock === "reserved" ? "Reservado" : "Reservar"}
+                    </button>
                   </form>
                 ) : (
-                  <p className="text-sm text-ash">{stock === "no" ? "Rechazado. No se cobra." : stock === "yes" ? "Confirmado. Se cobra." : ""}</p>
+                  <div className="flex flex-col items-start gap-2">
+                    <p className="text-sm text-ash">
+                      {stock === "no"
+                        ? "Rechazado. No se cobra."
+                        : stock === "reserved"
+                          ? "Reservado. Se cobra cuando haya stock."
+                          : stock === "yes"
+                            ? "Confirmado. Se cobra."
+                            : ""}
+                    </p>
+                    {stock === "reserved" && (order.status === "confirmed" || order.status === "shipped") ? (
+                      <form action="/api/admin/shop" method="post">
+                        <input type="hidden" name="orderId" value={order.id} />
+                        <input type="hidden" name="action" value="charge-reserved" />
+                        <input type="hidden" name="index" value={String(index)} />
+                        <button className="btn-atelier" type="submit">
+                          Cobrar reserva
+                        </button>
+                      </form>
+                    ) : null}
+                    {stock === "reserved" && line.reservePayUrl ? (
+                      <a className="break-all text-sm underline" href={line.reservePayUrl}>
+                        Enlace para la clienta
+                      </a>
+                    ) : null}
+                  </div>
                 )}
               </li>
             );
@@ -134,21 +176,20 @@ export default async function StudioOrderPage({
               <p className="mt-1 font-serif text-3xl">
                 A cobrar {charge.pending ? "—" : formatMoney(charge.captureCents)}
               </p>
-              {charge.pending ? (
-                <p className="mt-2 text-sm leading-relaxed text-ash">Marca cada artículo. Confirmar entra en el cobro. Rechazar sale del total.</p>
-              ) : charge.droppedCents > 0 ? (
-                <p className="mt-2 text-sm leading-relaxed text-ash">
-                  Rechazado {formatMoney(charge.droppedCents)}. La tarjeta tenía {formatMoney(order.totalCents)} apartados y se cargan {formatMoney(charge.captureCents)}. El resto se libera.
-                </p>
-              ) : (
-                <p className="mt-2 text-sm leading-relaxed text-ash">Todo confirmado. Se cobra el importe autorizado.</p>
-              )}
+              <p className="mt-2 text-sm leading-relaxed text-ash">{chargeCopy(charge, order.totalCents)}</p>
             </>
           ) : (
-            <p className="font-serif text-3xl">
-              {order.status === "cancelled" ? "Anulado" : "Cobrado"} {formatMoney(order.totalCents)}
-              {order.shippingChargeCents ? ` · envío ${formatMoney(order.shippingChargeCents)}` : " · envío gratis"}
-            </p>
+            <>
+              <p className="font-serif text-3xl">
+                {order.status === "cancelled" ? "Anulado" : "Cobrado"} {formatMoney(order.totalCents)}
+                {order.totalCents > 0 ? (order.shippingChargeCents ? ` · envío ${formatMoney(order.shippingChargeCents)}` : " · envío gratis") : ""}
+              </p>
+              {charge.reservedCents > 0 && (order.status === "confirmed" || order.status === "shipped") ? (
+                <p className="mt-2 text-sm leading-relaxed text-ash">
+                  Reservado {formatMoney(charge.reservedCents)}. Se cobra cuando haya stock, con un pago nuevo.
+                </p>
+              ) : null}
+            </>
           )}
         </div>
         <div className="mt-8 flex max-w-xl flex-col gap-6">
@@ -206,15 +247,21 @@ export default async function StudioOrderPage({
             {order.status === "pending_payment" ? null : (
               <p className="text-sm leading-relaxed text-ash">
                 {charge.pending
-                  ? "Cuando cada artículo esté confirmado o rechazado, el botón cobra solo la suma de los confirmados."
-                  : `Al finalizar se cargan ${formatMoney(charge.captureCents)} y se libera el resto de la reserva.`}
+                  ? "Cuando cada artículo esté confirmado, reservado o rechazado, el botón cobra solo lo confirmado."
+                  : charge.captureCents > 0
+                    ? `Al finalizar se cargan ${formatMoney(charge.captureCents)}. Lo reservado no se queda retenido en la tarjeta.`
+                    : "Al finalizar no se cobra nada. Las reservas se cobran cuando haya stock."}
               </p>
             )}
             <form action="/api/admin/shop" method="post">
               <input type="hidden" name="orderId" value={order.id} />
               <input type="hidden" name="action" value="confirm" />
               <button className="btn-atelier-solid btn-atelier w-full" type="submit">
-                {charge.pending ? "Finalizar pedido y cobrar" : `Cobrar ${formatMoney(charge.captureCents)}`}
+                {charge.pending
+                  ? "Finalizar pedido y cobrar"
+                  : charge.captureCents > 0
+                    ? `Cobrar ${formatMoney(charge.captureCents)}`
+                    : "Dejar reservado sin cobrar ahora"}
               </button>
             </form>
             <form action="/api/admin/shop" method="post">
@@ -229,4 +276,26 @@ export default async function StudioOrderPage({
       ) : null}
     </PortalFrame>
   );
+}
+
+function chargeCopy(
+  charge: { pending: boolean; droppedCents: number; reservedCents: number; captureCents: number },
+  authorizedCents: number,
+) {
+  if (charge.pending) {
+    return "Marca cada artículo. Confirmar entra en este cobro. Reservar se deja para cuando haya stock. Rechazar sale del total.";
+  }
+  if (charge.reservedCents === 0 && charge.droppedCents === 0) return "Todo confirmado. Se cobra el importe autorizado.";
+  const parts = [
+    charge.captureCents > 0
+      ? `La tarjeta tenía ${formatMoney(authorizedCents)} apartados y se cargan ${formatMoney(charge.captureCents)}.`
+      : "No se cobra nada ahora. Se anula la retención de la tarjeta.",
+  ];
+  if (charge.reservedCents > 0) {
+    parts.push(
+      `Reservado ${formatMoney(charge.reservedCents)}: el banco suelta lo que no se cobra y la retención caduca en unos 7 días, así que esa parte se cobra aparte cuando haya stock.`,
+    );
+  }
+  if (charge.droppedCents > 0) parts.push(`Rechazado ${formatMoney(charge.droppedCents)}, no se cobra.`);
+  return parts.join(" ");
 }

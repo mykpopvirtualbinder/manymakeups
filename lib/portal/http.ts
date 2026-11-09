@@ -12,6 +12,14 @@ function publicOrigin(request: Request) {
   return `${proto}://${host}`;
 }
 
+export function requestOrigin(request: Request) {
+  try {
+    return new URL(publicOrigin(request)).origin;
+  } catch {
+    return new URL(request.url).origin;
+  }
+}
+
 export function go(request: Request, path: string) {
   return NextResponse.redirect(new URL(path, publicOrigin(request)), 303);
 }

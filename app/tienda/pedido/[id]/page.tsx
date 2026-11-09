@@ -43,7 +43,13 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         {order.status === "authorized" ? (
           <p>El importe queda apartado hasta que confirme el stock. Si no hay, anulo la reserva y no se cobra.</p>
         ) : null}
-        {order.status === "confirmed" ? <p>El pago ya está cobrado. Preparo el envío y te aviso con el seguimiento.</p> : null}
+        {order.status === "confirmed" ? (
+          <p>
+            {charge.reservedCents > 0
+              ? "Lo confirmado ya está cobrado. Lo reservado se cobra cuando haya stock."
+              : "El pago ya está cobrado. Preparo el envío y te aviso con el seguimiento."}
+          </p>
+        ) : null}
         {order.status === "shipped" ? (
           <p>
             Enviado{order.carrier ? ` con ${order.carrier}` : ""}. Seguimiento: {order.tracking}.
@@ -63,15 +69,22 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               </span>
               <span className="mt-1 block text-sm text-ash">
                 Color {line.color}
-                {line.stock === "no" ? " · sin stock, no se cobra" : ""}
+                {line.stock === "no" ? " · sin stock, no se cobra" : line.stock === "reserved" ? " · reservado, se cobra cuando haya stock" : ""}
               </span>
             </span>
             <span className={line.stock === "no" ? "text-ash line-through" : undefined}>{formatMoney(line.lineChargeCents)}</span>
           </li>
         ))}
       </ul>
-      {open && charge.droppedCents > 0 && !charge.pending ? (
-        <p className="mt-6 text-sm text-ash">Reservado {formatMoney(order.totalCents)}. Se cobra {formatMoney(payable)}.</p>
+      {open && !charge.pending && (charge.droppedCents > 0 || charge.reservedCents > 0) ? (
+        <p className="mt-6 text-sm text-ash">
+          {charge.droppedCents > 0 ? `Sin stock ${formatMoney(charge.droppedCents)}. ` : ""}
+          {charge.reservedCents > 0 ? `Reservado ${formatMoney(charge.reservedCents)}, se cobra cuando haya stock. ` : ""}
+          Se cobra ahora {formatMoney(payable)}.
+        </p>
+      ) : null}
+      {!open && charge.reservedCents > 0 ? (
+        <p className="mt-6 text-sm text-ash">Reservado {formatMoney(charge.reservedCents)}. Se cobra cuando haya stock.</p>
       ) : null}
       <p className="mt-2 font-serif text-3xl">{formatMoney(payable)}</p>
       <p className="mt-4 text-sm text-ash">

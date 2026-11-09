@@ -54,6 +54,9 @@ export default async function StudioShopPage() {
                     <span className="ml-3">
                       {order.firstName} {order.lastName} · {statusLabel(order.status)}
                       {order.exempt ? " · sin IVA" : ""}
+                      {charge.reservedCents > 0 && (order.status === "confirmed" || order.status === "shipped")
+                        ? ` · reserva ${formatMoney(charge.reservedCents)}`
+                        : ""}
                     </span>
                   </span>
                   <span className="shrink-0 text-right font-serif text-2xl text-ink">

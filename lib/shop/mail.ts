@@ -2,13 +2,23 @@ import { site } from "@/lib/site";
 import { formatMoney } from "./quote";
 import type { Order } from "./types";
 
+function lineNote(stock: Order["lines"][number]["stock"]) {
+  if (stock === "no") return " (sin stock, no se cobra)";
+  if (stock === "reserved") return " (reservado, se cobra cuando haya stock)";
+  return "";
+}
+
 function lines(order: Order) {
   return order.lines
-    .map((line) => {
-      const missing = line.stock === "no" ? " (sin stock, no se cobra)" : "";
-      return `- ${line.qty} x ${line.name}, color ${line.color}${missing}`;
-    })
+    .map((line) => `- ${line.qty} x ${line.name}, color ${line.color}${lineNote(line.stock)}`)
     .join("\n");
+}
+
+function reservedNote(order: Order) {
+  const reserved = order.lines.filter((line) => line.stock === "reserved");
+  if (!reserved.length) return "";
+  const amount = formatMoney(reserved.reduce((sum, line) => sum + line.lineChargeCents, 0));
+  return `\n\nQueda reservado ${amount}, sin cobrar todavía. Ese importe se cobra cuando haya stock.`;
 }
 
 export async function sendShopMail(to: string, subject: string, text: string) {
@@ -42,7 +52,10 @@ export async function mailOrder(order: Order, kind: "authorized" | "confirmed" |
       order.paymentMode === "local"
         ? `He anotado tu pedido ${order.number} por ${total}. Estamos probando la tienda en local, así que no se ha tocado ninguna tarjeta.\n\n${lines(order)}\n\nPuedes verlo aquí: ${href}`
         : `He reservado ${total} de tu pedido ${order.number}. Todavía no está cobrado. En cuanto compruebe que el modelo y el color están disponibles, confirmo el cargo. Si no lo están, anulo la reserva y no se te cobra nada.\n\n${lines(order)}\n\nPuedes verlo aquí: ${href}`,
-    confirmed: `Ya está confirmado tu pedido ${order.number}. El importe de ${total} queda cobrado y preparo el envío.\n\n${lines(order)}\n\n${href}`,
+    confirmed:
+      order.totalCents > 0
+        ? `Ya está confirmado tu pedido ${order.number}. El importe de ${total} queda cobrado y preparo el envío.${reservedNote(order)}\n\n${lines(order)}\n\n${href}`
+        : `He dejado tu pedido ${order.number} reservado, sin cobrar de momento.${reservedNote(order)}\n\n${lines(order)}\n\n${href}`,
     cancelled: `He anulado tu pedido ${order.number}. No se ha cobrado nada: si viste una retención en la tarjeta, el banco la libera solo.\n\n${href}`,
     shipped: `Tu pedido ${order.number} ya ha salido. ${order.carrier ? `Mensajería: ${order.carrier}. ` : ""}Seguimiento: ${order.tracking}.\n\n${href}`,
     refunded: `He devuelto el importe de tu pedido ${order.number} (${total}). El abono llega a la misma tarjeta.\n\n${href}`,

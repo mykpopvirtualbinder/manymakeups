@@ -19,7 +19,7 @@ export type Customer = ShopAddress & {
 
 export type PublicCustomer = Omit<Customer, "passwordHash">;
 
-export type LineStock = "pending" | "yes" | "no";
+export type LineStock = "pending" | "yes" | "no" | "reserved";
 
 export type OrderLine = {
   productId: string;
@@ -30,6 +30,8 @@ export type OrderLine = {
   unitChargeCents: number;
   lineChargeCents: number;
   stock?: LineStock;
+  reservePayUrl?: string;
+  reservePaymentIntentId?: string;
 };
 
 export type OrderStatus =
