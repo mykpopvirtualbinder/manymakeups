@@ -28,8 +28,9 @@ export default async function StudioCustomerPage({ params }: { params: Promise<{
       pinned
       studio
       wide
+      dense
       kicker="Cliente"
-      title={`${customer.firstName} ${customer.lastName}`}
+      title="Cliente"
       aside={<StudioAside />}
     >
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
@@ -43,6 +44,8 @@ export default async function StudioCustomerPage({ params }: { params: Promise<{
           <p className="text-[0.68rem] uppercase tracking-[0.18em] text-ash">Datos</p>
           {vip ? <p className="mt-2 text-[0.68rem] uppercase tracking-[0.18em] text-gilt">VIP · Admin</p> : null}
           <p className="mt-2 text-sm leading-relaxed text-ink">
+            {customer.firstName} {customer.lastName}
+            <br />
             {customer.email}
             <br />
             {customer.phone}

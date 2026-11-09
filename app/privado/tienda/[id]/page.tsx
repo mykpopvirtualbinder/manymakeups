@@ -78,15 +78,10 @@ export default async function StudioOrderPage({
             <p className="mt-2 text-sm leading-relaxed text-ink">
               {order.exempt ? "Factura obligatoria por aduana." : order.wantsInvoice ? "Ha pedido factura." : "No ha pedido factura."}
               {order.dni ? ` DNI ${order.dni}.` : " Sin DNI."}
-              <br />
-              La factura se emite en Eventae. Este pedido no genera número.
             </p>
           </section>
         </div>
         {order.exempt ? <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink">{EXEMPT_INVOICE_NOTE}</p> : null}
-        {order.paymentMode === "local" ? (
-          <p className="mt-4 text-sm text-ash">Reserva local, sin tarjeta. Confirmar no cobra de verdad.</p>
-        ) : null}
         <ul className="mt-6 max-w-3xl divide-y divide-ink/10 border-y border-ink/10">
           {order.lines.map((line, index) => {
             const stock = line.stock === "yes" || line.stock === "no" ? line.stock : "pending";
@@ -208,9 +203,7 @@ export default async function StudioOrderPage({
       {open ? (
         <div className="shrink-0 border-t border-ink/10 bg-porcelain py-4">
           <div className="flex max-w-xl flex-col gap-3">
-            {order.status === "pending_payment" ? (
-              <p className="text-sm leading-relaxed text-ash">La clienta todavía no ha reservado la tarjeta. Puedes marcar los artículos; el cobro se hace cuando la reserva esté hecha.</p>
-            ) : (
+            {order.status === "pending_payment" ? null : (
               <p className="text-sm leading-relaxed text-ash">
                 {charge.pending
                   ? "Cuando cada artículo esté confirmado o rechazado, el botón cobra solo la suma de los confirmados."
