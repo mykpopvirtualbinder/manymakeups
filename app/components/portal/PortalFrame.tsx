@@ -37,7 +37,7 @@ export async function PortalFrame({
   const width = wide ? "max-w-[1400px]" : "max-w-[960px]";
   const header = (
       <header className="shrink-0 border-b border-ink/5">
-        <div className={`mx-auto flex ${width} gap-3 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:px-10 md:py-4 ${studio ? "flex-col sm:flex-row sm:items-center sm:justify-between" : "items-center justify-between"}`}>
+        <div className={`mx-auto flex ${width} items-center justify-between gap-3 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:px-10 md:py-4`}>
           <a
             href={backHref}
             className="flex min-w-0 items-center gap-3"
@@ -53,12 +53,12 @@ export async function PortalFrame({
               </div>
             ) : null}
             {studio && aside ? (
-              <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+              <PortalMenu label={copy.menu} closeLabel={copy.agendaClose}>
                 {aside}
                 <a className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href={backHref}>
                   {backLabel}
                 </a>
-              </div>
+              </PortalMenu>
             ) : aside ? (
               <PortalMenu label={copy.menu} closeLabel={copy.agendaClose}>
                 {aside}

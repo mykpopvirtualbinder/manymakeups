@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { BrandLogo } from "./BrandLogo";
+import { FooterLegal } from "./FooterLegal";
 import { site } from "@/lib/site";
 import { getLocale, getMessages, localePath } from "@/lib/i18n";
 
@@ -41,31 +42,27 @@ export async function SiteFooter({ compact = false }: { compact?: boolean }) {
         </div>
       </div>
       <div className="bg-linen/50 md:border-t md:border-ink/10">
-        <div className={`mx-auto flex max-w-[1120px] flex-col gap-4 md:flex-row md:flex-wrap md:items-center md:justify-between md:px-10 ${compact ? "px-4 py-3" : "px-6 py-4 md:gap-y-4 md:py-5"}`}>
-          <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-ink md:gap-x-6 md:gap-y-3 md:text-sm" aria-label={t.footer.legal}>
+        <div className={`relative mx-auto flex max-w-[1120px] flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-between md:px-10 ${compact ? "px-4 py-2" : "px-4 py-3 md:gap-y-4 md:px-6 md:py-5"}`}>
+          <nav className="hidden flex-wrap items-center gap-x-6 gap-y-3 text-sm text-ink md:flex" aria-label={t.footer.legal}>
             {links.map((item) => (
               <a key={item.href} className="underline-offset-4 hover:underline" href={item.href}>
                 {item.label}
               </a>
             ))}
           </nav>
-          <div className="flex items-center gap-3 md:hidden">
-            <BrandLogo size="footer" className="size-10" />
-            <div className="min-w-0 text-[0.68rem] normal-case leading-snug tracking-normal text-ash">
-              <p className="text-ink">{site.legalName}</p>
-              <p>
-                {site.streetAddress} · {site.postalCode} {site.city}
-              </p>
-              <p>
-                <a className="hover:text-ink" href={`mailto:${site.email}`}>
-                  {site.email}
-                </a>
-                {" · "}
-                <a className="hover:text-ink" href={`tel:${site.phone}`}>
-                  {site.phoneDisplay}
-                </a>
-              </p>
+          <div className="flex items-center justify-between gap-3 md:hidden">
+            <div className="flex min-w-0 items-center gap-3">
+              <BrandLogo size="footer" className="size-9" />
+              <div className="min-w-0 text-[0.68rem] normal-case leading-snug tracking-normal text-ash">
+                <p className="truncate text-ink">{site.legalName}</p>
+                <p className="truncate">
+                  <a className="hover:text-ink" href={`mailto:${site.email}`}>
+                    {site.email}
+                  </a>
+                </p>
+              </div>
             </div>
+            <FooterLegal label={t.footer.legal} links={links} />
           </div>
           <Image
             src="/brand/footer/logo-omyo.png"

@@ -155,6 +155,9 @@ function Icon({ name }: { name: string }) {
   if (name === "filter") {
     return <svg {...common}><path d="M4 6h16" /><path d="M7 12h10" /><path d="M10 18h4" /></svg>;
   }
+  if (name === "folder") {
+    return <svg {...common}><path d="M3 7h6l2 2h10v9H3z" /></svg>;
+  }
   return <svg {...common}><path d="M15 18H5V6h10" /><path d="m12 9 4 3-4 3" /></svg>;
 }
 
@@ -330,6 +333,7 @@ export function MailDesk() {
   const [phase, setPhase] = useState("");
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [foldersOpen, setFoldersOpen] = useState(false);
   const [readFilter, setReadFilter] = useState<"all" | "unread" | "read">("all");
   const fileRef = useRef<HTMLInputElement>(null);
   const openLink = useRef<() => void>(() => {});
@@ -653,8 +657,8 @@ export function MailDesk() {
   const allPicked = shown.length > 0 && shown.every((item) => picked.includes(item.id));
 
   return (
-    <div className="grid min-h-0 flex-1 overflow-hidden rounded-sm border border-ink/10 bg-porcelain md:grid-cols-[17rem_minmax(0,1fr)]">
-      <aside className={`${reading ? "hidden" : "flex"} min-h-0 flex-col overflow-y-auto border-ink/10 bg-porcelain md:flex md:border-r`}>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-sm border border-ink/10 bg-porcelain md:grid md:grid-cols-[17rem_minmax(0,1fr)]">
+      <aside className="hidden min-h-0 flex-col overflow-y-auto border-ink/10 bg-porcelain md:flex md:border-r">
         <div className="flex items-center gap-1 px-3 py-3">
           <Tool label="Mensaje nuevo" onClick={() => startCompose("new")}>
             <Icon name="compose" />
@@ -751,8 +755,56 @@ export function MailDesk() {
         </div>
       </aside>
 
-      <section className="grid min-h-0 min-w-0 md:grid-rows-[minmax(10rem,32%)_minmax(0,1fr)]">
-        <div className={`${reading ? "hidden" : "flex"} min-h-0 min-w-0 flex-col border-ink/10 bg-porcelain md:flex md:border-b`}>
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col md:grid md:grid-rows-[minmax(10rem,32%)_minmax(0,1fr)]">
+        <div className={`${reading ? "hidden" : "flex"} min-h-0 min-w-0 flex-1 flex-col border-ink/10 bg-porcelain md:flex md:border-b`}>
+          <div className="flex items-center gap-1 overflow-x-auto border-b border-ink/10 px-2 py-2 md:hidden">
+            <Tool label="Mensaje nuevo" onClick={() => startCompose("new")}>
+              <Icon name="compose" />
+            </Tool>
+            <button
+              type="button"
+              onClick={() => openView({ id: "global-inbox" })}
+              className={`shrink-0 rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.12em] ${view.id === "global-inbox" ? "bg-ink text-porcelain" : "text-ink"}`}
+            >
+              Entrada{totalUnread ? ` ${totalUnread}` : ""}
+            </button>
+            {ACCOUNTS.map((item) => {
+              const active = view.id === "all-inbox" && view.account === item.key;
+              const count = counts[item.key] || 0;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => openView({ id: "all-inbox", account: item.key })}
+                  className={`shrink-0 rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.12em] ${active ? "bg-ink text-porcelain" : "text-ash"}`}
+                >
+                  {item.label}{count ? ` ${count}` : ""}
+                </button>
+              );
+            })}
+            <Tool label="Carpetas" active={foldersOpen} onClick={() => setFoldersOpen((value) => !value)}>
+              <Icon name="folder" />
+            </Tool>
+          </div>
+          {foldersOpen ? (
+            <div className="grid max-h-40 grid-cols-2 gap-1 overflow-y-auto border-b border-ink/10 px-2 py-2 md:hidden">
+              <button type="button" className="rounded-lg px-2 py-1 text-left text-sm" onClick={() => openView({ id: "all-sent" })}>Enviados</button>
+              <button type="button" className="rounded-lg px-2 py-1 text-left text-sm" onClick={() => openView({ id: "all-junk" })}>No deseados</button>
+              <button type="button" className="rounded-lg px-2 py-1 text-left text-sm" onClick={() => openView({ id: "all-trash" })}>Papelera</button>
+              {ACCOUNTS.map((item) =>
+                FOLDERS.map((entry) => (
+                  <button
+                    key={`${item.key}-${entry.id}`}
+                    type="button"
+                    className="truncate rounded-lg px-2 py-1 text-left text-sm"
+                    onClick={() => openView({ id: "box", account: item.key, folder: entry.id })}
+                  >
+                    {item.label} · {entry.label}
+                  </button>
+                )),
+              )}
+            </div>
+          ) : null}
           <div className="flex items-center gap-1 border-b border-ink/10 px-2 py-2">
             <Tool
               label={selecting ? "Dejar de seleccionar" : "Seleccionar"}
@@ -847,7 +899,7 @@ export function MailDesk() {
           </div>
         </div>
 
-        <div className={`${reading ? "flex" : "hidden"} min-h-0 min-w-0 flex-col bg-porcelain md:flex`}>
+        <div className={`${reading ? "flex" : "hidden"} min-h-0 min-w-0 flex-1 flex-col bg-porcelain md:flex`}>
           {compose ? (
             <form
               className="flex min-h-0 flex-1 flex-col"
@@ -943,7 +995,7 @@ export function MailDesk() {
             </form>
           ) : selected ? (
             <article className="flex min-h-0 flex-1 flex-col">
-              <div className="flex flex-wrap items-center gap-1 border-b border-ink/10 px-2 py-2">
+              <div className="flex flex-nowrap items-center gap-1 overflow-x-auto border-b border-ink/10 px-2 py-2">
                 <span className="md:hidden">
                   <Tool label="Volver" onClick={() => setSelected(null)}>
                     <Icon name="back" />
@@ -976,7 +1028,7 @@ export function MailDesk() {
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-8">
                 <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-ink">{accountLabel(selected.account)}</p>
-                <h2 className="mt-2 font-serif text-2xl leading-tight md:text-3xl">{selected.subject || "(sin asunto)"}</h2>
+                <h2 className="mt-2 font-serif text-xl leading-tight md:text-3xl">{selected.subject || "(sin asunto)"}</h2>
                 <p className="mt-4 text-sm font-semibold">{displayName(place.folder === "sent" ? selected.to : selected.from)}</p>
                 <p className="text-sm text-ash">{place.folder === "sent" ? selected.to : selected.from}</p>
                 <p className="mt-1 text-[0.72rem] text-ash">Para {selected.to} · {formatWhen(selected.createdAt)}</p>
