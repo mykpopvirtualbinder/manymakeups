@@ -30,7 +30,6 @@ export default async function StudioShopPage() {
       wide
       kicker="Tienda"
       title="Tienda."
-      lead="No hay consulta automática de stock. Cuando entre un pedido reservado, míralo en La Casa del Pelo y confirma o rechaza cada artículo. Se cobra solo lo confirmado. La retención de la tarjeta dura unos 7 días."
       aside={<StudioAside />}
     >
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
