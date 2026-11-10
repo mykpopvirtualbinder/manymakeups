@@ -31,7 +31,7 @@ function formatEventDate(value: string) {
 export default async function StudioClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ok?: string; por?: string; q?: string; partida?: string; invite?: string; client?: string; sent?: string; wp?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; por?: string; q?: string; partida?: string; invite?: string; client?: string; wp?: string }>;
 }) {
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
@@ -42,7 +42,7 @@ export default async function StudioClientsPage({
     if (portalStoreClosed(err)) return <StoreClosed />;
     throw err;
   }
-  const { error, ok, por, q, partida, invite, client: inviteClient, sent, wp } = await searchParams;
+  const { error, ok, por, q, partida, invite, client: inviteClient, wp } = await searchParams;
   const mode = clientSearchMode(por);
   const query = q ?? "";
   const service = partida ?? "";
@@ -53,7 +53,6 @@ export default async function StudioClientsPage({
       pinned
       kicker="Estudio"
       title="Área clientes"
-      lead="Creas la cuenta con su correo, le envías el enlace y ella elige la contraseña. Luego ves la ficha, las fotos y cuelgas los papeles."
       studio
       aside={<StudioAside />}
     >
@@ -63,11 +62,6 @@ export default async function StudioClientsPage({
       </div>
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
       <MailSetupNotice />
-      <form action="/api/admin/mail-samples" method="post" className="mb-4">
-        <button className="text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink" type="submit">
-          Enviarme las muestras de correo
-        </button>
-      </form>
       {!portalStorageReady() ? (
         <PortalNotice>
           En producción hace falta un almacén Vercel Blob (BLOB_READ_WRITE_TOKEN) para que fotos y
@@ -84,9 +78,6 @@ export default async function StudioClientsPage({
         </PortalNotice>
       ) : null}
       {ok === "wp-quitado" ? <PortalNotice>Acceso de la wedding planner retirado.</PortalNotice> : null}
-      {ok === "muestras" ? (
-        <PortalNotice>Muestras enviadas a tu correo ({sent || "0"}).</PortalNotice>
-      ) : null}
       {ok === "recordatorio" && error !== "correo" ? (
         <PortalNotice>Recordatorio de activación enviado.</PortalNotice>
       ) : null}

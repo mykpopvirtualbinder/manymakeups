@@ -18,7 +18,7 @@ const copy: Record<
   es: {
     loading: "Cargando la cesta…",
     empty: "La cesta está vacía.",
-    browse: "Ver extensiones",
+    browse: "Ver la tienda",
     color: "Color",
     qty: "Cantidad",
     remove: "Quitar",
@@ -31,7 +31,7 @@ const copy: Record<
   en: {
     loading: "Loading your basket…",
     empty: "Your basket is empty.",
-    browse: "See the extensions",
+    browse: "See the shop",
     color: "Colour",
     qty: "Quantity",
     remove: "Remove",
@@ -44,7 +44,7 @@ const copy: Record<
   fr: {
     loading: "Chargement du panier…",
     empty: "Le panier est vide.",
-    browse: "Voir les extensions",
+    browse: "Voir la boutique",
     color: "Couleur",
     qty: "Quantité",
     remove: "Retirer",

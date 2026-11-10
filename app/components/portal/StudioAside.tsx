@@ -26,8 +26,17 @@ export async function StudioAside({ extra }: { extra?: ReactNode }) {
         Difusión
       </Link>
       <form className="w-full md:w-auto" action="/api/portal/logout?next=/privado" method="post">
-        <button className={item} type="submit">
-          Salir
+        <button
+          className="inline-flex min-h-11 w-full items-center text-ink hover:text-gilt md:size-11 md:justify-center"
+          type="submit"
+          aria-label="Salir"
+          title="Salir"
+        >
+          <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+            <path d="M10 7V5.5A1.5 1.5 0 0 1 11.5 4h6A1.5 1.5 0 0 1 19 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 10 18.5V17" />
+            <path d="M13 12H4" />
+            <path d="m6.5 9.5-2.5 2.5 2.5 2.5" />
+          </svg>
         </button>
       </form>
     </div>

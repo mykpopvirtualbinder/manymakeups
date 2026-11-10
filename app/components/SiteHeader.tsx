@@ -15,8 +15,6 @@ export async function SiteHeader() {
     { href: localePath(locale, "/#metodo"), label: t.nav.metodo },
     { href: localePath(locale, "/#ana"), label: t.nav.about },
     { href: localePath(locale, "/tienda"), label: t.nav.shop },
-    { href: localePath(locale, "/area-novia"), label: t.nav.brideArea },
-    { href: "/privado", label: t.nav.private },
   ];
 
   return (
@@ -50,9 +48,21 @@ export async function SiteHeader() {
           </nav>
           <LanguageSwitch current={locale} path={path} enabled />
           <a
-            className="inline-flex size-10 items-center justify-center text-ink md:hidden"
+            className="inline-flex size-10 items-center justify-center text-ink"
+            href={localePath(locale, "/area-novia")}
+            aria-label={t.nav.brideArea}
+            title={t.nav.brideArea}
+          >
+            <svg viewBox="0 0 24 24" className="size-[1.15rem]" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+              <circle cx="12" cy="8" r="3.2" />
+              <path d="M5.5 19.5c1.2-3 3.4-4.5 6.5-4.5s5.3 1.5 6.5 4.5" />
+            </svg>
+          </a>
+          <a
+            className="inline-flex size-10 items-center justify-center text-ink"
             href="/privado"
             aria-label={t.nav.private}
+            title={t.nav.private}
           >
             <svg viewBox="0 0 24 24" className="size-[1.15rem]" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
               <rect x="5" y="11" width="14" height="9" rx="1.5" />

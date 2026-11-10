@@ -96,6 +96,18 @@ export function CustomerDesk({ customers }: { customers: CustomerRow[] }) {
             onSubmit={(event) => {
               const submitter = (event.nativeEvent as SubmitEvent).submitter;
               const label = submitter instanceof HTMLButtonElement ? submitter.value : "";
+              if (label === "delete-customers") {
+                if (!picked.length) {
+                  event.preventDefault();
+                  return;
+                }
+                const withOrders = picked.some((customer) => customer.orders > 0);
+                const extra = withOrders ? " Los pedidos se quedan en la tienda." : "";
+                if (!window.confirm(`¿Borrar ${picked.length} clienta${picked.length === 1 ? "" : "s"}?${extra}`)) {
+                  event.preventDefault();
+                }
+                return;
+              }
               const verb = label === "void" ? "anular" : label === "delete" ? "borrar" : "archivar";
               if (!orderIds.length) {
                 window.alert("Esas clientas no tienen pedidos.");
@@ -113,6 +125,9 @@ export function CustomerDesk({ customers }: { customers: CustomerRow[] }) {
             {orderIds.map((id) => (
               <input key={id} type="hidden" name="orderId" value={id} />
             ))}
+            {picked.map((customer) => (
+              <input key={customer.id} type="hidden" name="customerId" value={customer.id} />
+            ))}
             <button
               type="button"
               className="text-[0.62rem] uppercase tracking-[0.14em] text-ash hover:text-ink"
@@ -124,8 +139,9 @@ export function CustomerDesk({ customers }: { customers: CustomerRow[] }) {
               {picked.length} seleccionada{picked.length === 1 ? "" : "s"}
             </span>
             <BulkButton action="void" label="Anular" disabled={!picked.length} />
-            <BulkButton action="delete" label="Borrar" disabled={!picked.length} />
+            <BulkButton action="delete" label="Borrar pedidos" disabled={!picked.length} />
             <BulkButton action="archive" label="Archivar" disabled={!picked.length} />
+            <BulkButton action="delete-customers" label="Borrar clienta" disabled={!picked.length} />
           </form>
         ) : null}
       </div>
@@ -173,6 +189,26 @@ function chip(active: boolean) {
   return active
     ? "border border-ink px-2 py-1 text-[0.62rem] uppercase tracking-[0.14em] text-ink"
     : "border border-transparent px-2 py-1 text-[0.62rem] uppercase tracking-[0.14em] text-ash hover:text-ink";
+}
+
+export function DeleteCustomerForm({ id, orders }: { id: string; orders: number }) {
+  return (
+    <form
+      className="mt-10"
+      action="/api/admin/shop"
+      method="post"
+      onSubmit={(event) => {
+        const extra = orders > 0 ? " Los pedidos se quedan en la tienda." : "";
+        if (!window.confirm(`¿Borrar esta clienta?${extra}`)) event.preventDefault();
+      }}
+    >
+      <input type="hidden" name="action" value="delete-customers" />
+      <input type="hidden" name="customerId" value={id} />
+      <button className="border border-ink/15 px-3 py-2 text-[0.62rem] uppercase tracking-[0.14em] text-ink hover:bg-ink hover:text-porcelain" type="submit">
+        Borrar clienta
+      </button>
+    </form>
+  );
 }
 
 function BulkButton({ action, label, disabled }: { action: string; label: string; disabled: boolean }) {

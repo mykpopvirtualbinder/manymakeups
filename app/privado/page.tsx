@@ -20,6 +20,7 @@ export default async function StudioLoginPage({
 
   return (
     <PortalFrame
+      iconBack
       kicker="Estudio"
       title="Área privada."
       lead={

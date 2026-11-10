@@ -1,6 +1,7 @@
 import { go, requestOrigin } from "@/lib/portal/http";
 import { requireShopStaff } from "@/lib/shop/access";
 import { ShopError, chargeReserved, confirmOrder, deleteOrder, refundOrder, releaseOrder, setLineStock, setOrderArchived, shipOrder, voidOrder } from "@/lib/shop/orders";
+import { deleteCustomers } from "@/lib/shop/store";
 
 export async function POST(request: Request) {
   const admin = await requireShopStaff();
@@ -14,6 +15,13 @@ export async function POST(request: Request) {
   const listBack = backTo === "archivo" ? "/privado/tienda?archivo=1" : backTo === "clientes" ? "/privado/tienda/clientes" : "/privado/tienda";
   const ids = [...new Set(form.getAll("orderId").map((value) => String(value).trim()).filter(Boolean))];
   const back = fromList ? listBack : `/privado/tienda/${ids[0] || id}`;
+  if (action === "delete-customers") {
+    const customerIds = [...new Set(form.getAll("customerId").map((value) => String(value).trim()).filter(Boolean))];
+    if (!customerIds.length) return go(request, withQuery("/privado/tienda/clientes", "error", "Selecciona al menos una clienta."));
+    const removed = await deleteCustomers(customerIds);
+    if (!removed) return go(request, withQuery("/privado/tienda/clientes", "error", "No he podido borrar la clienta."));
+    return go(request, "/privado/tienda/clientes?ok=clientas");
+  }
   if (String(form.get("bulk") || "") === "1") {
     if (!ids.length) return go(request, withQuery(back, "error", "Selecciona al menos un pedido."));
     if (action !== "void" && action !== "delete" && action !== "archive" && action !== "unarchive") {
