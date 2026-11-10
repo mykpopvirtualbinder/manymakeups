@@ -63,7 +63,7 @@ export const shopIntro: Record<
       cta: "Ver las extensiones",
     },
     crumbHome: "Inicio",
-    crumbShop: "Extensiones",
+    crumbShop: "Tienda",
     sections: [
       {
         heading: "Descubre nuestra colección de Extensiones de Clip 100 % Naturales",
@@ -145,7 +145,7 @@ export const shopIntro: Record<
       cta: "See the extensions",
     },
     crumbHome: "Home",
-    crumbShop: "Extensions",
+    crumbShop: "Shop",
     sections: [
       {
         heading: "Our 100% natural clip-in extensions",
@@ -227,7 +227,7 @@ export const shopIntro: Record<
       cta: "Voir les extensions",
     },
     crumbHome: "Accueil",
-    crumbShop: "Extensions",
+    crumbShop: "Boutique",
     sections: [
       {
         heading: "Notre collection d'extensions à clips 100 % naturelles",

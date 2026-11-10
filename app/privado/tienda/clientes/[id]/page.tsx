@@ -1,5 +1,6 @@
 import { PortalFrame } from "@/app/components/portal/PortalFrame";
 import { StudioAside } from "@/app/components/portal/StudioAside";
+import { DeleteCustomerForm } from "@/app/components/shop/CustomerDesk";
 import { ShopAdminNav } from "@/app/components/shop/ShopAdminNav";
 import { isShopAdminEmail, requireShopStaff } from "@/lib/shop/access";
 import { statusLabel } from "@/lib/shop/orders";
@@ -84,6 +85,7 @@ export default async function StudioCustomerPage({ params }: { params: Promise<{
           ))}
         </ul>
         {orders.length === 0 ? <p className="mt-6 text-sm text-ash">Esta cuenta todavía no tiene pedidos.</p> : null}
+        <DeleteCustomerForm id={customer.id} orders={orders.length} />
       </div>
     </PortalFrame>
   );

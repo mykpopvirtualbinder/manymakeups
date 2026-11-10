@@ -83,7 +83,7 @@ export function CheckoutForm({ customer, local }: { customer: PublicCustomer; lo
       <div>
         <p className="text-ash">La cesta está vacía.</p>
         <a className="btn-atelier mt-6" href="/tienda">
-          Ver extensiones
+          Ver la tienda
         </a>
       </div>
     );

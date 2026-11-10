@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function StudioCustomersPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+export default async function StudioCustomersPage({ searchParams }: { searchParams: Promise<{ error?: string; ok?: string }> }) {
   const admin = await requireShopStaff();
   if (!admin) redirect("/privado");
   const query = await searchParams;
@@ -33,6 +33,7 @@ export default async function StudioCustomersPage({ searchParams }: { searchPara
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
         <ShopAdminNav current="clientes" />
         {query.error ? <PortalNotice>{query.error}</PortalNotice> : null}
+        {query.ok === "clientas" ? <PortalNotice>Clienta borrada. Si tenía pedidos, siguen en la tienda.</PortalNotice> : null}
         <CustomerDesk
           customers={customers.map((customer) => {
             const own = orders.filter((order) => order.customerId === customer.id);

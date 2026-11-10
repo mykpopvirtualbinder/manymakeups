@@ -93,6 +93,16 @@ export async function saveCustomer(customer: Customer) {
   });
 }
 
+export async function deleteCustomers(ids: string[]) {
+  const wanted = new Set(ids.filter(Boolean));
+  if (!wanted.size) return 0;
+  return mutateShop((db) => {
+    const before = db.customers.length;
+    db.customers = db.customers.filter((customer) => !wanted.has(customer.id));
+    return before - db.customers.length;
+  });
+}
+
 export async function getOrder(id: string) {
   const db = await readDb();
   return db.orders.find((order) => order.id === id) ?? null;
