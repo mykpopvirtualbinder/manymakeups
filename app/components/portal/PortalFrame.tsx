@@ -17,6 +17,7 @@ export async function PortalFrame({
   dense = false,
   studio = false,
   wide = false,
+  iconBack = false,
 }: {
   kicker: string;
   title: string;
@@ -28,6 +29,7 @@ export async function PortalFrame({
   dense?: boolean;
   studio?: boolean;
   wide?: boolean;
+  iconBack?: boolean;
 }) {
   const locale = localize ? await getLocale() : "es";
   const copy = getPortalCopy(locale);
@@ -78,6 +80,18 @@ export async function PortalFrame({
                   {backLabel}
                 </a>
               </PortalMenu>
+            ) : iconBack ? (
+              <a
+                className="inline-flex size-11 items-center justify-center text-ink hover:text-gilt"
+                href={backHref}
+                aria-label={backLabel}
+                title={backLabel}
+              >
+                <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+                  <path d="M19 12H5" />
+                  <path d="m11 6-6 6 6 6" />
+                </svg>
+              </a>
             ) : (
               <>
                 <a
