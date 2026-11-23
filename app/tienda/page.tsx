@@ -12,6 +12,23 @@ export async function generateMetadata(): Promise<Metadata> {
   return pageMeta({ path: "/tienda", title: copy.seoTitle, description: copy.seoDescription });
 }
 
+function IntroSections({ sections }: { sections: { heading?: string; paragraphs: string[] }[] }) {
+  return (
+    <div className="max-w-3xl space-y-8">
+      {sections.map((section) => (
+        <section key={section.heading}>
+          {section.heading ? <h2 className="font-serif text-2xl leading-tight text-ink md:text-3xl">{section.heading}</h2> : null}
+          {section.paragraphs.map((paragraph) => (
+            <p key={paragraph} className="mt-3 text-base leading-relaxed text-ash">
+              {paragraph}
+            </p>
+          ))}
+        </section>
+      ))}
+    </div>
+  );
+}
+
 export default async function ShopPage() {
   const locale = await getLocale();
   const copy = shopIntro[locale];
@@ -69,19 +86,19 @@ export default async function ShopPage() {
       ]}
     >
       <ShopJsonLd data={graph} />
-      <div className="max-w-3xl space-y-8">
-        {copy.sections.map((section) => (
-          <section key={section.heading}>
-            {section.heading ? <h2 className="font-serif text-2xl leading-tight text-ink md:text-3xl">{section.heading}</h2> : null}
-            {section.paragraphs.map((paragraph) => (
-              <p key={paragraph} className="mt-3 text-base leading-relaxed text-ash">
-                {paragraph}
-              </p>
-            ))}
-          </section>
-        ))}
+      <details className="group md:hidden">
+        <summary className="inline-flex cursor-pointer list-none items-center border border-ink px-4 py-2 text-[0.68rem] uppercase tracking-[0.16em] text-ink [&::-webkit-details-marker]:hidden">
+          <span className="group-open:hidden">{copy.more}</span>
+          <span className="hidden group-open:inline">{copy.less}</span>
+        </summary>
+        <div className="mt-8">
+          <IntroSections sections={copy.sections} />
+        </div>
+      </details>
+      <div className="hidden md:block">
+        <IntroSections sections={copy.sections} />
       </div>
-      <div className="mt-12">
+      <div className="mt-8 md:mt-12">
         <CatalogBrowser products={products} />
       </div>
       <section className="mt-16 max-w-3xl">

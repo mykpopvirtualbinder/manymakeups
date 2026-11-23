@@ -16,6 +16,8 @@ export const shopIntro: Record<
     crumbShop: string;
     sections: { heading?: string; paragraphs: string[] }[];
     chartAlt: string;
+    more: string;
+    less: string;
     priceNote: string;
     layersLabel: string;
     filters: {
@@ -32,8 +34,8 @@ export const shopIntro: Record<
   es: {
     kicker: "Tienda",
     title: "Extensiones.",
-    description: "Extensiones de clip 100 % naturales. Envío a toda España. Gratis por encima de 100 € y 2,90 € por debajo.",
-    lead: "Extensiones de clip de cabello 100 % natural, sistema REMY. Las preparo en el atelier y las envío a toda España.",
+    description: "Extensiones de clip 100 % naturales. Envío a toda España. Gastos de envío gratuitos en pedidos superiores a 100 €.",
+    lead: "Extensiones de clip 100 % naturales. Envío a toda España. Gastos de envío gratuitos en pedidos superiores a 100 €.",
     seoTitle: "Extensiones de clip de cabello natural",
     seoDescription:
       "Proveedor de extensiones de clip 100 % naturales, sistema REMY, con envío a toda España. Many Makeups, el atelier de Ana Zarza en Nules, las prepara y las envía. Gratis desde 100 €.",
@@ -99,6 +101,8 @@ export const shopIntro: Record<
       },
     ],
     chartAlt: "Carta de colores de las extensiones",
+    more: "Saber más",
+    less: "Cerrar",
     priceNote: "IVA incluido en península y Baleares. En Canarias, Ceuta y Melilla se descuenta al pagar.",
     layersLabel: "Capas",
     filters: {
@@ -114,8 +118,8 @@ export const shopIntro: Record<
   en: {
     kicker: "Shop",
     title: "Extensions.",
-    description: "100% natural clip-in extensions. Delivery throughout Spain. Free over €100, otherwise €2.90.",
-    lead: "100% natural REMY clip-in hair extensions. I prepare them at the atelier and ship them throughout Spain.",
+    description: "100% natural clip-in extensions. Delivery throughout Spain. Free shipping on orders over €100.",
+    lead: "100% natural clip-in extensions. Delivery throughout Spain. Free shipping on orders over €100.",
     seoTitle: "Natural clip-in hair extensions",
     seoDescription:
       "Supplier of 100% natural REMY clip-in extensions, delivered throughout Spain. Many Makeups, Ana Zarza’s atelier in Nules, prepares and ships them. Free delivery over €100.",
@@ -181,6 +185,8 @@ export const shopIntro: Record<
       },
     ],
     chartAlt: "Extension colour chart",
+    more: "Read more",
+    less: "Close",
     priceNote: "VAT included for mainland Spain and the Balearic Islands. It is removed at checkout for the Canary Islands, Ceuta and Melilla.",
     layersLabel: "Layers",
     filters: {
@@ -196,8 +202,8 @@ export const shopIntro: Record<
   fr: {
     kicker: "Boutique",
     title: "Extensions.",
-    description: "Extensions à clips 100 % naturelles. Livraison dans toute l'Espagne. Offerte au-dessus de 100 €, sinon 2,90 €.",
-    lead: "Extensions à clips en cheveux 100 % naturels, système REMY. Je les prépare à l’atelier et je les envoie dans toute l’Espagne.",
+    description: "Extensions à clips 100 % naturelles. Livraison dans toute l'Espagne. Frais de livraison offerts pour les commandes supérieures à 100 €.",
+    lead: "Extensions à clips 100 % naturelles. Livraison dans toute l'Espagne. Frais de livraison offerts pour les commandes supérieures à 100 €.",
     seoTitle: "Extensions à clips en cheveux naturels",
     seoDescription:
       "Fournisseur d’extensions à clips 100 % naturelles, système REMY, livrées dans toute l’Espagne. Many Makeups, l’atelier d’Ana Zarza à Nules, les prépare et les expédie. Offertes dès 100 €.",
@@ -263,6 +269,8 @@ export const shopIntro: Record<
       },
     ],
     chartAlt: "Nuancier des extensions",
+    more: "En savoir plus",
+    less: "Fermer",
     priceNote: "TVA incluse pour la péninsule et les Baléares. Elle est retirée au paiement pour les Canaries, Ceuta et Melilla.",
     layersLabel: "Couches",
     filters: {
